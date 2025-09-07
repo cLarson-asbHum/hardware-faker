@@ -55,9 +55,13 @@ import java.util.concurrent.LinkedBlockingDeque;
 
 import static java.util.Map.entry;    
 
-import org.xmlpull.v1.XmlPullParser;
-import org.xmlpull.v1.XmlPullParserException;
-import org.xmlpull.v1.XmlPullParserFactory;
+import org.xml.sax.Attributes;
+import org.xml.sax.SAXException;
+
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
+import org.xml.sax.helpers.DefaultHandler;
 
 public class XmlHardwareFakeFactory {
     public static enum HardwareType {
@@ -81,21 +85,17 @@ public class XmlHardwareFakeFactory {
         UNKNOWN;
 
         public final String[] attributes;
-        private final Map<String, Integer> phonebook = new HashMap<>();
 
         private HardwareType(String[] attributes) {
             this.attributes  = attributes;
-            for(int i = 0; i < attributes.length; i++) {
-                this.phonebook.put(attributes[i], i);
-            }
         }
 
         private HardwareType() {
             this(new String[0]);
         }
 
-        public String get(String attributeName, String[] values) throws MissingRequiredAttributeException {
-            if(!phonebook.containsKey(attributeName)) {
+        public String get(String attributeName, Attributes values, String uri) throws MissingRequiredAttributeException {
+            if(!Arrays.asList(attributes).contains(attributeName)) {
                 throw new MissingRequiredAttributeException(String.format(
                     "Cannot find attribute \"%s\" for HardwareType \"%s\"",
                     attributeName,
@@ -103,15 +103,15 @@ public class XmlHardwareFakeFactory {
                 ));
             }
 
-            return values[phonebook.get(attributeName)];
+            return values.getValue(uri, attributeName);
         }
 
-        public double getDouble(String attributeName, String[] values) throws MissingRequiredAttributeException {
-            return Double.parseDouble(get(attributeName, values));
+        public double getDouble(String attributeName, Attributes values, String uri) throws MissingRequiredAttributeException {
+            return Double.parseDouble(get(attributeName, values, uri));
         }
     
-        public int getInt(String attributeName, String[] values) throws MissingRequiredAttributeException {
-            return Integer.parseInt(get(attributeName, values));
+        public int getInt(String attributeName, Attributes values, String uri) throws MissingRequiredAttributeException {
+            return Integer.parseInt(get(attributeName, values, uri));
         }
     }
 
@@ -148,100 +148,84 @@ public class XmlHardwareFakeFactory {
     
     private int lastLynxAddress = -1;
     private int parentAddress = -1;
-    private XmlPullParserFactory inputFactory;
+    private SAXParserFactory inputFactory;
+    private Exception bubbledException = null;
 
-    public XmlHardwareFakeFactory() throws XmlPullParserException {
-        inputFactory = XmlPullParserFactory.newInstance();
-        inputFactory.setValidating(true); // Want to verify syntax of the given XML.
+    public XmlHardwareFakeFactory() {
+        inputFactory = SAXParserFactory.newInstance();
+        inputFactory.setValidating(true);
     }
 
     public HardwareMap createHardwareMap(InputStream xmlStream) 
-        throws XmlPullParserException, IOException, MissingRequiredAttributeException, 
-                InterruptedException, RobotCoreException
+        throws SAXException, IOException, MissingRequiredAttributeException, 
+            ParserConfigurationException, InterruptedException, RobotCoreException
     {
-        final XmlPullParser reader = inputFactory.newPullParser();
-        reader.setInput(xmlStream, null);
+        final SAXParser reader = inputFactory.newSAXParser();
         final HardwareMap result = new HardwareMap(null, null); // Yes, the OpModeNotifier *shouldn't* be null, but it doesn't matter
-
-        // Parsing the XML for our hardware
-        // We make sure we don't exceed the hard-coded MAX_ITERS, for safety
-        final int MAX_ITERS = 31415; // Arbitary value. Doesn't matter as long as its big
-        final Deque<HardwareDevice> hierarchy = new LinkedBlockingDeque<>();
-        DcMotorImplExFake[] motors = new DcMotorImplExFake[0];
-        // TODO: Add lists for analog inputs and digital devices.
-        int event = reader.next();
 
         parentAddress = -1;
         lastLynxAddress = -1;
-        for(int i = 0; event != XmlPullParser.END_DOCUMENT && i < MAX_ITERS; i++) {
-            switch (event) {
-                case XmlPullParser.START_TAG: {
-                    // Adding the current tag to the stack
-                    final HardwareDevice device = addHardwareFromCurrentTag(reader, result, hierarchy);
-                    hierarchy.addFirst(device);
-                    if(device instanceof DcMotorImplExFake) {
-                        motors = Arrays.copyOf(motors, motors.length + 1);
-                        motors[motors.length - 1] = (DcMotorImplExFake) device;
-                        findLynxUsbDevice(hierarchy).setMotors(motors); // FIXME: Horrible performance? O(3n^2)?
-                    } /* else if(device instanceof AnalogInput) {} // TODO: add digital and analog devices */
-                    break;
-                }
+        reader.parse(xmlStream, new ConfigHandler(result));
 
-                case XmlPullParser.END_TAG: {
-                    // Removing from hierarchy
-                    hierarchy.removeFirst();
-                    break;
-                }
-
-                default:
-                    // Sauruman the Stinky
-                    break;
-            }
-            event = reader.next();
+        // Throwing any exception that was supposed to have been thrown
+        if(bubbledException != null) {
+            xmlStream.close();
+            bubbledException = null;
+            throw new SAXException("Error occurred during SAX XML parsing", bubbledException);
         }
-
+        
         // Cleaning up
         xmlStream.close();
         return result;
     } 
 
-    private HardwareDevice addHardwareFromCurrentTag(XmlPullParser parser, HardwareMap map, Deque<HardwareDevice> hierarchy) 
-        throws XmlPullParserException, MissingRequiredAttributeException, InterruptedException, RobotCoreException
-    {
+    private HardwareDevice addHardwareFromCurrentTag(
+        String name, 
+        String uri, 
+        Attributes attr, 
+        HardwareMap map, 
+        Deque<HardwareDevice> hierarchy
+    ) throws  MissingRequiredAttributeException, InterruptedException, RobotCoreException {
         // Getting the current tag
         HardwareType type;
-        if(!tagToHardwareMap.containsKey(parser.getName())) {
+        if(!tagToHardwareMap.containsKey(name)) {
             type = HardwareType.UNKNOWN;
         } else {
-            type = tagToHardwareMap.get(parser.getName());
+            type = tagToHardwareMap.get(name);
         }
 
         // Adding the hardware based off the tag.
-        final HardwareDevice result = createDevice(type, parser, hierarchy);
-        map.put(allNonNull(queryAttributeValues(parser, new String[]{"name"}))[0], result);
+        final HardwareDevice result = createDevice(type, uri, attr, hierarchy);
+        throwIfDoesNotContain(attr, new String[]{ "name" });
+        map.put(attr.getValue(uri, "name"), result);
         return result;
     }
 
     private HardwareDevice createDevice(
-        HardwareType type, 
-        XmlPullParser parser, 
+        HardwareType type,
+        String uri,
+        Attributes attributes,
         Deque<HardwareDevice> hierarchy
-    ) throws XmlPullParserException, MissingRequiredAttributeException, 
+    ) throws  MissingRequiredAttributeException, 
             InterruptedException, RobotCoreException
     {
         switch(type) {
             case CR_SERVO: { 
-                final String[] attr = allNonNull(queryAttributeValues(parser, type.attributes));
+                throwIfDoesNotContain(attributes, type.attributes);
                 return new CRServoImplExFake(new ContinuousServoData(
-                    type.getDouble("rpm", attr), 
+                    type.getDouble("rpm", attributes, uri), 
                     0, 
-                    new PwmRange(type.getDouble("pwmMin", attr), type.getDouble("pwmMin", attr))
-                ), findServoController(hierarchy), type.getInt("port", attr));
+                    new PwmRange(
+                        type.getDouble("pwmMin", attributes, uri), 
+                        type.getDouble("pwmMin", attributes, uri)
+                    )
+                ), findServoController(hierarchy), type.getInt("port", attributes, uri));
             }
 
             case LYNX_MODULE: {
-                final String[] attr = allNonNull(queryAttributeValues(parser, type.attributes));
-                final int port = type.getInt("port", attr);
+                // final String[] attr = allNonNull(queryAttributeValues(parser, type.attributes));
+                throwIfDoesNotContain(attributes, type.attributes);
+                final int port = type.getInt("port", attributes, uri);
                 final LynxUsbDeviceImplFake usbDevice = findLynxUsbDevice(hierarchy);
                 return usbDevice.getOrAddModule(
                     new LynxModuleDescription.Builder(port, port == parentAddress)
@@ -251,32 +235,38 @@ public class XmlHardwareFakeFactory {
             }
 
             case LYNX_USB_DEVICE: {
-                parentAddress = Integer.parseInt(queryAttributeValues(parser, type.attributes)[0]);
+                throwIfDoesNotContain(attributes, type.attributes);
+                parentAddress = type.getInt("parentModuleAddress", attributes, uri);
                 final LynxUsbDeviceImplFake device = new LynxUsbDeviceImplFake();
                 device.armOrPretend();
                 return device;
             }
 
             case MOTOR: { 
-                final String[] attr = allNonNull(queryAttributeValues(parser, type.attributes));
+                // final String[] attr = allNonNull(queryAttributeValues(parser, type.attributes));
+                throwIfDoesNotContain(attributes, type.attributes);
                 return new DcMotorImplExFake(new MotorData(
-                    type.getDouble("rpm", attr), 
+                    type.getDouble("rpm", attributes, uri), 
                     0, 
-                    type.getDouble("ticksPerRev", attr)
-                ), findDcMotorController(hierarchy), type.getInt("port", attr));
+                    type.getDouble("ticksPerRev", attributes, uri)
+                ), findDcMotorController(hierarchy), type.getInt("port", attributes, uri));
             }
 
             case MOTOR_CONTROLLER: 
                 return new DcMotorControllerExFake(findLynxModule(hierarchy));
 
             case SERVO: { 
-                final String[] attr = allNonNull(queryAttributeValues(parser, type.attributes));
+                // final String[] attr = allNonNull(queryAttributeValues(parser, type.attributes));
+                throwIfDoesNotContain(attributes, type.attributes);
                 return new ServoImplExFake(new PositionalServoData(
-                    type.getDouble("rpm", attr), 
-                    type.getDouble("turns", attr),
+                    type.getDouble("rpm", attributes, uri), 
+                    type.getDouble("turns", attributes, uri),
                     0, 
-                    new PwmRange(type.getDouble("pwmMin", attr), type.getDouble("pwmMin", attr))
-                ), findServoController(hierarchy), type.getInt("port", attr));
+                    new PwmRange(
+                        type.getDouble("pwmMin", attributes, uri), 
+                        type.getDouble("pwmMin", attributes, uri)
+                    )
+                ), findServoController(hierarchy), type.getInt("port", attributes, uri));
             }
 
             case SERVO_CONTROLLER: 
@@ -344,63 +334,65 @@ public class XmlHardwareFakeFactory {
         return new LynxUsbDeviceImplFake();
     }
 
-    /**
-     * Verifies that all elements in the array are non null. If any are null,
-     * a MissingRequiredAttributeException is thrown.
-     * 
-     * @param values What to check. If any element is null, it will throw..
-     * @return The given array.
-     * @throws MissingRequiredAttributeException A value was null
-     */
-    private String[] allNonNull(String[] values) throws MissingRequiredAttributeException {
-        for(int i = 0; i < 0; i++) {
-            if(values[i] == null) {
-                throw new MissingRequiredAttributeException(String.format(
-                    "Attribute value in %s was null (index %d)",
-                    values[i],
-                    i
-                ));
+    private class ConfigHandler extends DefaultHandler {
+        private final Deque<HardwareDevice> hierarchy = new LinkedBlockingDeque<>();
+        private final HardwareMap result;
+        private DcMotorImplExFake[] motors = new DcMotorImplExFake[0];
+        // TODO: Add didigtal and analog inputs.
+
+        public ConfigHandler(HardwareMap result) {
+            this.result = result;
+        }
+
+        @Override
+        public void startElement(String uri, String name, String unused, Attributes attr) {
+            // Adding the current tag to the stack
+            try {
+                final HardwareDevice device = addHardwareFromCurrentTag(name, uri, attr, result, hierarchy);
+                hierarchy.addFirst(device);
+                if(device instanceof DcMotorImplExFake) {
+                    motors = Arrays.copyOf(motors, motors.length + 1);
+                    motors[motors.length - 1] = (DcMotorImplExFake) device;
+                    findLynxUsbDevice(hierarchy).setMotors(motors); // FIXME: Horrible performance? O(3n^2)?
+                } /* else if(device instanceof AnalogInput) {} // TODO: add digital and analog devices */
+            } catch (Exception exc) {
+                bubbledException = exc;
             }
         }
 
-        return values;
+        @Override
+        public void endElement(String uri, String name, String unused) {
+            // Removing from hierarchy
+            hierarchy.removeFirst();
+        }
     }
 
-    /**
-     * Gets the values of the current tag's attributes with the given names. The 
-     * returned array is always the same length as the given names array. 
-     * Tags in the returned array correspond 1-to-1 with the names. For 
-     * example, consider the names are "name", "rpm", "nonexistent", and "pwm", 
-     * in that order. The values returned may be "servo", "312", `null`, and ""
-     * 
-     * If an attribute with the given name is not found, the corresponding value 
-     * in the returned array is null. If the attribute appears multiple times, 
-     * the last specified value is returned.   
-     * 
-     * @param parser Where to source the current tag.
-     * @param attributeNames The names to query. 
-     * @return Values for each of the given names. Index 0 corresponds with name 
-     * 0 in `attributeNames`, index 1 with 1, etc.
-     * @throws XmlPullParserException If the parser is not in START_TAG.
-     */
-    private String[] queryAttributeValues(XmlPullParser parser, String[] attributeNames) throws XmlPullParserException {
-        final String[] result = new String[attributeNames.length];
-
-        for(int i = 0; i < parser.getAttributeCount(); i++) {
-            // Checking the current name against the names to search for
-            final String foundName = parser.getAttributeName(i);
-            for(int j = 0; j < attributeNames.length; j++) {
-                if(result[j] == null && foundName.equals(attributeNames[j])) {
-                    result[j] = parser.getAttributeValue(i);
+    private void throwIfDoesNotContain(Attributes attr, String[] requiredAttributes) 
+        throws MissingRequiredAttributeException
+    {
+        final boolean[] hasFound = new boolean[requiredAttributes.length];
+        for(int i = 0; i < attr.getLength(); i++) {
+            for(final String name : requiredAttributes) {
+                if(!hasFound[i] && attr.getLocalName(i).equals(name)) {
+                    hasFound[i] = true;
                 }
             }
         }
 
-        return result;
+        // Throwing if any are false
+        for(int i = 0; i < requiredAttributes.length; i++) {
+            if(!hasFound[i]) {
+                throw new MissingRequiredAttributeException(String.format(
+                    "Could not find required attribute \"%s\"", 
+                    requiredAttributes[i]
+                ));
+            }
+        }
     }
 
     public HardwareMap createHardwareMap(File file) 
-        throws XmlPullParserException, IOException, MissingRequiredAttributeException, InterruptedException, RobotCoreException
+        throws  IOException, MissingRequiredAttributeException, SAXException, 
+            ParserConfigurationException, InterruptedException, RobotCoreException
     {
         final InputStream stream = new FileInputStream(file);
         final HardwareMap result = createHardwareMap(stream);
@@ -409,15 +401,15 @@ public class XmlHardwareFakeFactory {
     }
 
     public HardwareMap createHardwareMap(String fileName) 
-        throws XmlPullParserException, IOException, MissingRequiredAttributeException, 
-                InterruptedException, RobotCoreException
+        throws  IOException, MissingRequiredAttributeException, SAXException, 
+            ParserConfigurationException,InterruptedException, RobotCoreException
     {
         return createHardwareMap(new File(fileName));
     }
 
     public HardwareMap createHardwareMapFromContents(String xmlContents) 
-        throws XmlPullParserException, IOException, MissingRequiredAttributeException, 
-                InterruptedException, RobotCoreException
+        throws  IOException, MissingRequiredAttributeException, SAXException, 
+            ParserConfigurationException, InterruptedException, RobotCoreException
     {
         final InputStream stream = new ByteArrayInputStream(xmlContents.getBytes(StandardCharsets.UTF_8));
         final HardwareMap result = createHardwareMap(stream);

@@ -433,7 +433,7 @@ public class LynxUsbDeviceImplFake extends LynxUsbDeviceImpl {
         return this;
     }
 
-    public LynxUsbDeviceImplFake setDigitalsChannels(DigitalChannelImplFake[] newInputs) {
+    public LynxUsbDeviceImplFake setDigitalChannels(DigitalChannelImplFake[] newInputs) {
         this.digitalChannels = newInputs;
         return this;
     }

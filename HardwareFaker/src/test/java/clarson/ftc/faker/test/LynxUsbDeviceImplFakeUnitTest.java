@@ -2,11 +2,16 @@ package clarson.ftc.faker.test;
 
 import clarson.ftc.faker.DcMotorControllerExFake;
 import clarson.ftc.faker.DcMotorImplExFake;
+import clarson.ftc.faker.DigitalChannelControllerFake;
+import clarson.ftc.faker.DigitalChannelImplFake;
+import clarson.ftc.faker.LynxModuleHardwareFake;
 import clarson.ftc.faker.LynxUsbDeviceImplFake;
 import clarson.ftc.faker.updater.ModularUpdater;
 import clarson.ftc.faker.updater.Updateable;
+import clarson.ftc.faker.util.EasyTimedStateGetter;
 import clarson.ftc.faker.util.UnsupportedLynxUsbCommandException;
 import clarson.ftc.faker.wrapper.MotorData;
+import clarson.ftc.faker.wrapper.DigitalChannelData;
 
 import static clarson.ftc.faker.test.TestUtil.*;
 
@@ -65,10 +70,20 @@ class LynxUsbDeviceImplFakeUnitTest {
             lynx.setMotors(new DcMotorImplExFake[] {
                 new DcMotorImplExFake(312, 576.6),
                 new DcMotorImplExFake(1600, 100, 123.4),
-                new DcMotorImplExFake(312, -576.6, 1000)
+                new DcMotorImplExFake(312, -576.6, 1000),
+                null
             });
 
-            // TODO: Add digital channels and analog inputs!
+            lynx.setDigitalChannels(new DigitalChannelImplFake[] {
+                new DigitalChannelImplFake(),
+                new DigitalChannelImplFake(() -> true),
+                null,
+                new DigitalChannelImplFake(false),
+                null,
+                null,
+                new DigitalChannelImplFake(new EasyTimedStateGetter((deltaSec) -> deltaSec % 1 < 0.5)),
+                null
+            });
         });
     }
 
@@ -92,13 +107,26 @@ class LynxUsbDeviceImplFakeUnitTest {
             new DcMotorImplExFake(312, -576.6, 1000)
         };
 
+        DigitalChannelControllerFake digitalController = new DigitalChannelControllerFake(null);
+        DigitalChannelImplFake[] channels = new DigitalChannelImplFake[8];
+
         @BeforeEach
         void createLynxUsbDevice() {
             lynx = new LynxUsbDeviceImplFake();
- 
             lynx.setMotors(motors);
 
-            // TODO: Add digital channels and analog inputs!
+            channels = new DigitalChannelImplFake[] {
+                new DigitalChannelImplFake(new DigitalChannelData(), digitalController, 0),
+                new DigitalChannelImplFake(new DigitalChannelData(() -> true), digitalController, 1),
+                null,
+                new DigitalChannelImplFake(new DigitalChannelData(true), digitalController, 3),
+
+                null,
+                null,
+                new DigitalChannelImplFake(new DigitalChannelData(new EasyTimedStateGetter((deltaSec) -> deltaSec % 1 < 0.5)), digitalController, 6),
+                null
+            };
+            lynx.setDigitalChannels(channels);
         }
 
         @DisplayName("Create LynxModule") 
@@ -342,6 +370,9 @@ class LynxUsbDeviceImplFakeUnitTest {
                 } catch(RobotCoreException | InterruptedException err) {
                     fail(err);
                 }
+
+                
+                digitalController.setLynxModule((LynxModuleHardwareFake) module);
             }
 
             // NOTE: Hardware is added in the createLynxUsbDevice() method
@@ -370,7 +401,7 @@ class LynxUsbDeviceImplFakeUnitTest {
             @DisplayName("Bulk Response is correct")
             @Test
             void isResponseCorrect() throws InterruptedException, LynxNackException {
-                // Add some variation to the motors
+                // Add some variation to the motors and channels
                 motors[0].setVelocity(312);
                 motors[2].setVelocity(628);
                 motors[2].addAngularVelOffset(2 * Math.PI / 100 * 100); // 100 ticks / sec
@@ -452,7 +483,31 @@ class LynxUsbDeviceImplFakeUnitTest {
                     // NOTE: Not testing the isOverCurrent as that relies on a flawed current reading
                 }
 
-                // TODO: Verify digital channel and analog inputs
+                for(int i = 0; i < channels.length; i++) {
+                    final DigitalChannelImplFake channel = channels[i];
+                    final int portNumber = i; 
+
+                    // Check that the data is zero if the channel is null
+                    if(channel == null) {
+                        System.out.println("[is correct] port: " + portNumber);
+                        System.out.println("[is correct] current port is null");
+                        
+                        assertEquals(false, response.getDigitalInput(portNumber));
+                        continue; // Don't do the rest of the stuff
+                    }
+
+                    // Only runs if the channel is non-null:
+                    final DigitalChannelData data = 
+                            ((DigitalChannelControllerFake) channel.getController()).getData(i);
+                    System.out.println("[is correct] port: " + portNumber);
+                    System.out.println("[is correct] state: " + channel.getState());
+                    assertEquals(data.lastState, response.getDigitalInput(portNumber));
+
+                    // NOTE: Not testing the isOverCurrent as that relies on a flawed current reading
+                }
+
+
+                // TODO: Verify analog inputs
             }
             
             /* // TODO: Move these tests into a LynxModuleUnitTest class

@@ -864,6 +864,19 @@ class ModularUpdaterUnitTest {
                     assertNotEquals(motorContData.position, originalPosition);
                     assertNotEquals(originalPosition, motorCont.getCurrentPosition()); // NOTE: Delay from getCurrentPosition is disabled
                     assertEquals(Math.round(motorContData.position), motorCont.getCurrentPosition()); // NOTE: Delay from getCurrentPosition is disabled
+                
+                    // Checking beahvior. Unexpected behavior throws in updateAllIfCacheOutdated
+                    final double secondPosition = motorContData.position;
+                    expectingUpdateAll = true;
+                    assertDoesNotThrow(() -> mockUpdater.updateAllIfCacheOutdated(
+                        1.0, 
+                        motorCont,
+                        new LynxGetMotorEncoderPositionCommand(control, motorCont.getPortNumber())
+                    ));
+                    assertNotEquals(motorContData.position, secondPosition);
+                    assertNotEquals(secondPosition, motorCont.getCurrentPosition()); // NOTE: Delay from getCurrentPosition is disabled
+                    assertEquals(Math.round(motorContData.position), motorCont.getCurrentPosition()); // NOTE: Delay from getCurrentPosition is disabled
+                
                 }
                 
                 @DisplayName("isCacheOutdated is correct for BulkCachingMode.OFF")

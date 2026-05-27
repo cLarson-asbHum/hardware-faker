@@ -2,6 +2,7 @@ package clarson.ftc.faker;
 
 import clarson.ftc.faker.updater.Updater;
 import clarson.ftc.faker.util.TimedStateGetter;
+import clarson.ftc.faker.util.EasyTimedStateGetter;
 import clarson.ftc.faker.updater.TwoWayUpdateable;
 import clarson.ftc.faker.updater.ModularUpdater;
 import clarson.ftc.faker.updater.SimulateDelay;
@@ -29,7 +30,7 @@ public class DigitalChannelImplFake extends DigitalChannelImpl implements TwoWay
      * @return The lowest avaiable port, or -1 if none exists.
      */
     private static int findAvaiablePort(DigitalChannelControllerFake controller) {
-        for(int i = 0; i < 4; i++) {
+        for(int i = 0; i < 8; i++) {
             if(controller.isPortAvailable(i)) {
                 return i;
             }
@@ -43,10 +44,21 @@ public class DigitalChannelImplFake extends DigitalChannelImpl implements TwoWay
     private final DigitalChannelControllerFake controller;
     private final int port;
 
+    /**
+     * Constructs a new DigitalCahnnel fake in the OUTPUT mode, with an initial 
+     * state of false (off).
+     */
     public DigitalChannelImplFake() {
         this(false);
     }
 
+    /**
+     * Constructs a new DigitalChannel fake in the OUTPUT mode, with the given 
+     * initial state.
+     * 
+     * @param initialState Whether the channel is in the on state (true), or off
+     * (false) 
+     */
     public DigitalChannelImplFake(boolean initialState) {
         super(lastController = DigitalChannelControllerFake.createPossiblyWithNullModule(), 0);
 
@@ -56,34 +68,34 @@ public class DigitalChannelImplFake extends DigitalChannelImpl implements TwoWay
         this.port = 0;
     }
 
+    /**
+     * Creates a new DigitalChannel fake in the INPUT mode. The values for
+     * `getState()` are obtained from the provided stateGetter argument 
+     * everytime update() is called.
+     * 
+     * A channel constructed from this constructor must be updated for 
+     * new values to be obtained from getState(). This can occur automatically 
+     * if the channel is connected to an updater, but this may not be the case 
+     * if the channel was constructed manually (i.e., not obtained from a 
+     * HardwareMap). 
+     * 
+     * @param stateGetter How the values for `getState()` are obtained
+     */
     public DigitalChannelImplFake(BooleanSupplier stateGetter) {
-        this(new TimedStateGetter() {
-            private boolean isUpdatingEnabled = true;
-
-            @Override
-            public boolean getAsBoolean() {
-                return stateGetter.getAsBoolean();
-            }
-
-            @Override
-            public double update(double unused) {
-                // Do nothing
-                return 0;
-            }
-
-            public boolean isUpdatingEnabled() {
-                return isUpdatingEnabled;
-            }
-
-            @Override
-            public boolean setUpdatingEnabled(boolean newUpdatingEnabled) {
-                final boolean oldValue = this.isUpdatingEnabled;
-                this.isUpdatingEnabled = newUpdatingEnabled;
-                return oldValue != newUpdatingEnabled;
-            }
-        });
+        this(new EasyTimedStateGetter(stateGetter));
     }
-    
+
+    /**
+     * Creates a new DigitalChannel fake in the INPUT mode. The values for
+     * `getState()` are obtained from the provided stateGetter argument.
+     * 
+     * NOTE: EasyTimedStateGetters only have different values for `getState()`
+     * if they are updated through their `update()` method, which is called 
+     * internally by DigitalChannelImplFake's update() method. This is normally 
+     * done automatically if the digital channel is connected to 
+     * 
+     * @param stateGetter How the values for `getState()` are obtained
+     */
     public DigitalChannelImplFake(TimedStateGetter stateGetter) {
         super(lastController = DigitalChannelControllerFake.createPossiblyWithNullModule(), 0);
         
@@ -93,6 +105,26 @@ public class DigitalChannelImplFake extends DigitalChannelImpl implements TwoWay
         this.port = 0;
     }
 
+    /**
+     * Creates a new DigitalChannel fake with initial conditions specified by 
+     * the given data wrapper. The channel is then attempted to be connected to 
+     * the given port on the controller. If the port cannot be connected to 
+     * (either because it is occupied or nonexistent), this constructor will 
+     * throw an IllegalArumentException.
+     * 
+     * The specific data wrapper is cloned, not reused, in the channel fake. 
+     * In other words, modifications to the provided argument will not affect
+     * the digital channel's internal data wrapper (which can be accessed with 
+     * the getData() method), and vice versa. The `channel` property of the 
+     * data wrapper will not be respected, for obvious reasons.
+     * 
+     * 
+     * @param data The initial conditions for the DigitalChannel. Is cloned, not 
+     * reused (see above).
+     * @param controller The controller which the DigitalChannel resides on
+     * @param port The port number, 0-7 inclusive, which the channel is plugged 
+     * into on the controller
+     */
     public DigitalChannelImplFake(DigitalChannelData data, DigitalChannelControllerFake controller, int port) {
         super(controller, port);
         
@@ -105,7 +137,23 @@ public class DigitalChannelImplFake extends DigitalChannelImpl implements TwoWay
         this.controller = controller;
         this.port = port;
     }
-
+/**
+     * Creates a new DigitalChannel fake with initial conditions specified by 
+     * the given data wrapper. The channel is then attempted to be connected to 
+     * the controller. If the port cannot be connected to (becuase no ports are 
+     * available), this constructor will throw an IllegalArumentException.
+     * 
+     * The specific data wrapper is cloned, not reused, in the channel fake. 
+     * In other words, modifications to the provided argument will not affect
+     * the digital channel's internal data wrapper (which can be accessed with 
+     * the getData() method), and vice versa. The `channel` property of the 
+     * data wrapper will not be respected, for obvious reasons.
+     * 
+     * 
+     * @param data The initial conditions for the DigitalChannel. Is cloned, not 
+     * reused (see above).
+     * @param controller The controller which the DigitalChannel resides on
+     */
     public DigitalChannelImplFake(DigitalChannelData data, DigitalChannelControllerFake controller) {
         this(data, controller, findAvaiablePort(controller));
     }

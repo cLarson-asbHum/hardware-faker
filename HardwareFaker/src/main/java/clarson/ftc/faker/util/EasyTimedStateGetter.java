@@ -6,11 +6,7 @@ import java.util.function.Function;
 /**
  * Creates a TimedStateGetter with a boolean generator.  
  */
-public final class EasyTimedStateGetter implements TimedStateGetter {
-    private final Function<Double, Boolean> booleanGenerator;
-    private boolean lastState;
-    private boolean isUpdatingEnabled = true;
-
+public final class EasyTimedStateGetter extends UpdateableSupplier<Boolean> implements TimedStateGetter {
     /**
      * Constructs a TimedStateGetter whose getAsBoolean() and getState() methods return
      * values obtained from invoking the provided supplier. Construction invokes the 
@@ -42,8 +38,7 @@ public final class EasyTimedStateGetter implements TimedStateGetter {
      * @param supplier What determines the return value of getAsBoolean() and getState(). 
      */
     public EasyTimedStateGetter(Function<Double, Boolean> booleanGenerator) {
-        this.booleanGenerator = booleanGenerator;
-        this.lastState = booleanGenerator.apply(0.0);
+        super(booleanGenerator);
     }
 
     /**
@@ -54,45 +49,6 @@ public final class EasyTimedStateGetter implements TimedStateGetter {
      */
     @Override
     public boolean getAsBoolean() {
-        return lastState;
-    }
-
-    /**
-     * Attempts to update the value returned by `getAsBoolean()`. In other words, `getAsBoolean()`
-     * may return a different value after this method is called (succesfully); this is the only
-     * way by which it can return a different value. 
-     * 
-     * An invocation may be unsuccesful either because updating is not enabled (see 
-     * `setUpdatingIsEnabled()` and `isUpdatingEnabled()`), or because the deltaSec argument was 
-     * 0. In both cases, the return value of getAsBoolean() is guaranteed to be the same as it was 
-     * before. Note that a succesful update call does not guarantee that the value *will* differ;
-     * rather, it will simply be what ever the boolean generator provided at construction will 
-     * return. 
-     * 
-     * @param deltaSec The time (in seconds) that has passed since the last call to update().
-     * Can be any number, but the update will be unsucessful if it is 0.
-     * @return 0 if the update was unsuccesful; 1 otherwise. 
-     */
-    @Override
-    public double update(double deltaSec) {
-        if(!isUpdatingEnabled || deltaSec == 0) {
-            return 0;
-        }
-
-        // All conditions were met; updating the lastState
-        this.lastState = booleanGenerator.apply(deltaSec);
-        return 1;
-    }
-
-    @Override
-    public boolean isUpdatingEnabled() {
-        return isUpdatingEnabled;
-    }
-
-    @Override
-    public boolean setUpdatingEnabled(boolean newUpdatingEnabled) {
-        final boolean old = isUpdatingEnabled;
-        this.isUpdatingEnabled = newUpdatingEnabled;
-        return old != newUpdatingEnabled;
+        return this.get();
     }
 }

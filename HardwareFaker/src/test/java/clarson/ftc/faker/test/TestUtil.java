@@ -21,6 +21,7 @@ public class TestUtil {
             return true;
         } 
     }
+    
 
     /**
      * Asserts that the actual value is within tolerance of the expected value.
@@ -42,9 +43,50 @@ public class TestUtil {
      * This is useful for floating point operations that can accumulate error
      * or operations that themselves rely on tolerance.
      * 
+     * This method is an alias of `assertWithin()`
+     * 
+     * @param expected The value that some operation should get
+     * @param actual Output of the operation
+     * @param eps The tolerance, above or below. Tolerance is inclusive
+     * @param name Descriptor that is shown on an error message
+     */
+    public static void assertFloatEquals(double expected, double actual, double eps, String name){
+        assertWithin(expected, actual, eps, name);
+    }
+
+    /**
+     * Asserts that the actual value is within tolerance of the expected value.
+     * This is useful for floating point operations that can accumulate error
+     * or operations that themselves rely on tolerance.
+     * 
      * @param expected The value that some operation should get
      * @param actual Output of the operation
      * @param eps The tolerance, above or below. Is exclusive (equality fails)
+     * @param name Descriptor that is shown on an error messsage
+     */
+    public static void assertWithin(double expected, double actual, double eps, String name) {
+        if(Math.abs(expected - actual) > eps) {
+            // throw ("expected: <" + expected + "> with tolerance: <" + eps + "> but was: <" + actual + ">");
+            // throw new RuntimeException("waaat? o_O");
+            AssertionFailureBuilder
+                .assertionFailure()
+                .reason(name + " ==> expected: <" + expected + "> with tolerance: <" + eps + "> but was: <" + actual + ">")
+                // .message("expected: <" + expected + "> with tolerance: <" + eps + "> but was: <" + actual + ">")
+                // .actual(actual)
+                // .expected(expected)
+                .buildAndThrow();
+        }
+    }
+    
+    /**
+     * Asserts that the actual value is within tolerance of the expected value.
+     * This is useful for floating point operations that can accumulate error
+     * or operations that themselves rely on tolerance.
+     * 
+     * @param expected The value that some operation should get
+     * @param actual Output of the operation
+     * @param eps The tolerance, above or below. Is exclusive (equality fails)
+     * @param name Descriptor that is shown on an error messsage
      */
     public static void assertWithin(double expected, double actual, double eps) {
         if(Math.abs(expected - actual) > eps) {
@@ -71,11 +113,28 @@ public class TestUtil {
      * @param unexpected The value that some operation should not get
      * @param actual Output of the operation
      * @param eps The tolerance, above or below. Is inclusive (equality fails)
+     * @param name What is displayed on an error message
+     */
+    public static void assertFloatNotEquals(double unexpected, double actual, double eps, String name) {
+        assertNotWithin(unexpected, actual, eps, name);
+    }
+
+    /**
+     * Asserts that the actual value is not within tolerance of the expected 
+     * value. This is useful for floating point operations that can accumulate 
+     * error or operations that themselves rely on tolerance, but that you
+     * want to verify something changed.
+     * 
+     * This method is an alias of `assertNotWithin()`
+     * 
+     * @param unexpected The value that some operation should not get
+     * @param actual Output of the operation
+     * @param eps The tolerance, above or below. Is inclusive (equality fails)
      */
     public static void assertFloatNotEquals(double unexpected, double actual, double eps) {
         assertNotWithin(unexpected, actual, eps);
     }
-    
+
 
     /**
      * Asserts that the actual value is not within tolerance of the expected 
@@ -100,4 +159,30 @@ public class TestUtil {
                 .buildAndThrow();
         }
     }
+
+    /**
+     * Asserts that the actual value is not within tolerance of the expected 
+     * value. This is useful for floating point operations that can accumulate 
+     * error or operations that themselves rely on tolerance, but that you
+     * want to verify something changed.
+     * 
+     * @param unexpected The value that some operation should not get
+     * @param actual Output of the operation
+     * @param eps The tolerance, above or below. Is inclusive (equality fails)
+     * @param name Descriptor that is shown on an error message
+     */
+    public static void assertNotWithin(double unexpected, double actual, double eps, String name) {
+        if(Math.abs(unexpected - actual) < eps) {
+            // throw ("expected: <" + expected + "> with tolerance: <" + eps + "> but was: <" + actual + ">");
+            // throw new RuntimeException("waaat? o_O");
+            AssertionFailureBuilder
+                .assertionFailure()
+                .reason(name + " ==> Did not expect: <" + unexpected + "> with tolerance: <" + eps + "> but was: <" + actual + ">")
+                // .message("expected: <" + expected + "> with tolerance: <" + eps + "> but was: <" + actual + ">")
+                // .actual(actual)
+                // .expected(expected)
+                .buildAndThrow();
+        }
+    }
+    
 }

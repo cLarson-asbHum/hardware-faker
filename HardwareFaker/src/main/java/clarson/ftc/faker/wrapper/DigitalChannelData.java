@@ -2,6 +2,7 @@ package clarson.ftc.faker.wrapper;
 
 import clarson.ftc.faker.DigitalChannelImplFake;
 import clarson.ftc.faker.updater.Updateable;
+import clarson.ftc.faker.util.EasyTimedStateGetter;
 import clarson.ftc.faker.util.TimedStateGetter;
 
 import com.qualcomm.robotcore.hardware.DigitalChannel;
@@ -57,6 +58,19 @@ public class DigitalChannelData implements Updateable {
 
     /**
      * Constructs a data wrapper a null `channel` field. It is assumed to be
+     * in the `INPUT` state. `getState()` will return the value of stateGetter
+     * that was obtained after the last call to update. The initial state is set 
+     * to lastValue, although this is unlikely to be important
+     * 
+     * @param stateGetter What supplies the value of `getState()` in the `INPUT` mode
+     */
+    public DigitalChannelData(BooleanSupplier stateGetter) {
+        this(new EasyTimedStateGetter(stateGetter));
+    }
+
+
+    /**
+     * Constructs a data wrapper a null `channel` field. It is assumed to be
      * in the `INPUT` state. `getState()` will return the value of stateGetter.
      * The initial state is set to lastValue, although this is unlikely to be 
      * important
@@ -87,7 +101,7 @@ public class DigitalChannelData implements Updateable {
      * @param initialState The first value of the `lastState` field.
      */
     public DigitalChannelData(DigitalChannelImplFake channel, boolean initialState) {
-        this(channel, null /* <- Placeholder value */, false, DigitalChannel.Mode.OUTPUT);
+        this(channel, null /* <- Placeholder value */, initialState, DigitalChannel.Mode.OUTPUT);
 
         // I hate having no flexible constructor bodies.
         this.stateGetter = new TimedStateGetter() {
@@ -116,6 +130,19 @@ public class DigitalChannelData implements Updateable {
             }
         };
     
+    }
+    
+    /**
+     * Constructs a data wrapper for the given channel, assuming it to be 
+     * in the `INPUT` state. `getState()` will return the value of stateGetter
+     * that was obtained after the last call to update. The initial state is set 
+     * to lastValue, although this is unlikely to be important.
+     * 
+     * @param channel Value of the `channel` field
+     * @param stateGetter What supplies the value of `getState()` in the `INPUT` mode
+     */
+    public DigitalChannelData(DigitalChannelImplFake channel, BooleanSupplier stateGetter) {
+        this(channel, new EasyTimedStateGetter(stateGetter));
     }
 
     /**

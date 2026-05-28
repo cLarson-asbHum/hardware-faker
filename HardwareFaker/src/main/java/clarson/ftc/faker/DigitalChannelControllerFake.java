@@ -3,7 +3,7 @@ package clarson.ftc.faker;
 import clarson.ftc.faker.wrapper.DigitalChannelData;
 
 import com.qualcomm.hardware.lynx.LynxModule;
-import com.qualcomm.hardware.lynx.commands.core.LynxGetBulkInputDataCommand;
+import com.qualcomm.hardware.lynx.commands.core.LynxGetSingleDIOInputCommand;
 import com.qualcomm.robotcore.exception.RobotCoreException;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.DigitalChannelController;
@@ -54,7 +54,7 @@ public class DigitalChannelControllerFake implements DigitalChannelController {
      * @return Whether the port exists and is unnoccupied.
      */
     public boolean isPortAvailable(int portNumber) {
-        return channels[portNumber] != null && portNumber >= 0 && portNumber <= 7;
+        return channels[portNumber] == null && portNumber >= 0 && portNumber <= 7;
     }
 
     /**
@@ -95,6 +95,10 @@ public class DigitalChannelControllerFake implements DigitalChannelController {
         this.shouldReread = newShouldReread;
     }
 
+    boolean shouldReread() {
+        return this.shouldReread;
+    }
+
     @Override
     public SerialNumber getSerialNumber() {
         return this.serialNumber;
@@ -102,8 +106,7 @@ public class DigitalChannelControllerFake implements DigitalChannelController {
     
     @Override
     public DigitalChannel.Mode getDigitalChannelMode(int channel) {
-        // TODO: wrapper mode get
-        return null;
+        return getData(channel).mode;
     }
     
     @Override
@@ -121,9 +124,10 @@ public class DigitalChannelControllerFake implements DigitalChannelController {
     public boolean getDigitalChannelState(int channel) {
         if(!shouldReread && module.getBulkCachingMode() != LynxModule.BulkCachingMode.OFF) {
             final LynxModule.BulkData data = module.recordBulkCachingCommandIntent(
-                new LynxGetBulkInputDataCommand(module),
-                "digitalState" + channel
+                new LynxGetSingleDIOInputCommand(module, channel),
+                "" // Empty tag because this is not a LynxGetBulkInputDataCommand (the only command which reuires a tag)
             );
+
             return data.getDigitalChannelState(channel);
         }
 

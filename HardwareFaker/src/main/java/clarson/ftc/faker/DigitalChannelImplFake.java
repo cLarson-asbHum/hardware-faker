@@ -137,7 +137,8 @@ public class DigitalChannelImplFake extends DigitalChannelImpl implements TwoWay
         this.controller = controller;
         this.port = port;
     }
-/**
+
+    /**
      * Creates a new DigitalChannel fake with initial conditions specified by 
      * the given data wrapper. The channel is then attempted to be connected to 
      * the controller. If the port cannot be connected to (becuase no ports are 
@@ -208,16 +209,28 @@ public class DigitalChannelImplFake extends DigitalChannelImpl implements TwoWay
     @SimulateDelay(ON_BULK_READS)
     @Override
     public boolean getState() {
+        // Simulating delay only if this method was called by the user, not by any 
+        // internal methods. This is done to prevent Updater.updateAll() from being 
+        // called multiple times by LynxModuleUsbDeviceImplFake.readBulkDataPayload()
+        // FIXME: Every Bulk-read hardware needs this condition!! Add a corresponding test for each one
+        if(controller.shouldReread()) {
+            return super.getState();    
+        }
+
+        // The method was called by a user rather than an internal method; 
+        // simulate delay.
         final LynxGetSingleDIOInputCommand command = new LynxGetSingleDIOInputCommand(
             controller.getLynxModule(),
             this.getPortNumber()
         );
+        
         ModularUpdater.updateAllOnceIfAnyCacheOutdated(
             updaters, 
             Updater.UpdateDelaySource.DIGITAL, 
             this, 
             command
         );
+
         return super.getState();
     }
 

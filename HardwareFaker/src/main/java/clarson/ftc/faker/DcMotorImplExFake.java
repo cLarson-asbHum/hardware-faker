@@ -2,6 +2,7 @@ package clarson.ftc.faker;
 
 import com.qualcomm.hardware.lynx.commands.core.LynxGetMotorEncoderPositionCommand;
 import com.qualcomm.hardware.lynx.commands.core.LynxGetBulkInputDataCommand;
+import com.qualcomm.hardware.lynx.commands.core.LynxIsMotorAtTargetCommand;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorController;
 import com.qualcomm.robotcore.hardware.DcMotorImplEx;
@@ -116,7 +117,7 @@ public class DcMotorImplExFake extends DcMotorImplEx implements Rotateable, TwoW
         );
 
         final MotorData newData = new MotorData(this, rpm, ticksPerRev, initialPosition);
-        ((DcMotorControllerExFake) this.getController()).connect(newData);
+        this.getControllerFake().connect(newData);
         this.getController().setMotorType(0, getFakeConfiguration(newData));
     }
 
@@ -201,8 +202,12 @@ public class DcMotorImplExFake extends DcMotorImplEx implements Rotateable, TwoW
     }
 
     public MotorData getData() {
-        // final DcMotorControllerExFake controller = (DcMotorControllerExFake) this.getController();
-        return ((DcMotorControllerExFake) this.getController()).getData(this.getPortNumber());
+        // final DcMotorControllerExFake controller = this.getControllerFake();
+        return this.getControllerFake().getData(this.getPortNumber());
+    }
+
+    public DcMotorControllerExFake getControllerFake() {
+        return (DcMotorControllerExFake) this.controller;
     }
 
     @Override
@@ -256,9 +261,14 @@ public class DcMotorImplExFake extends DcMotorImplEx implements Rotateable, TwoW
     }
 
     @Override
-    @SimulateDelay(ALWAYS)
+    @SimulateDelay(ON_BULK_READS)
     public boolean isBusy() {
-        Updater.updateAllOnce(updaters, MOTOR);
+        final LynxIsMotorAtTargetCommand command = new LynxIsMotorAtTargetCommand(
+            this.getControllerFake().getLynxModule(),
+            this.getPortNumber()
+        );
+
+        ModularUpdater.updateAllOnceIfAnyCacheOutdated(updaters, MOTOR, this, command);
         return super.isBusy();
     }
 
@@ -308,7 +318,7 @@ public class DcMotorImplExFake extends DcMotorImplEx implements Rotateable, TwoW
     @SimulateDelay(ON_BULK_READS)
     public int getCurrentPosition() {
         final LynxGetMotorEncoderPositionCommand command = new LynxGetMotorEncoderPositionCommand(
-            ((DcMotorControllerExFake) this.getController()).getLynxModule(),
+            this.getControllerFake().getLynxModule(),
             this.getPortNumber()
         );
         ModularUpdater.updateAllOnceIfAnyCacheOutdated(updaters, MOTOR, this, command);
@@ -369,17 +379,20 @@ public class DcMotorImplExFake extends DcMotorImplEx implements Rotateable, TwoW
     public double getVelocity() {
         final String tag = "motorVelocity" + this.getPortNumber();
         final LynxGetBulkInputDataCommand command = new LynxGetBulkInputDataCommand(
-            ((DcMotorControllerExFake) this.getController()).getLynxModule()
+            this.getControllerFake().getLynxModule()
         );
         ModularUpdater.updateAllOnceIfAnyCacheOutdated(updaters, MOTOR, this, command, tag);
         return super.getVelocity();
     }
     
     @Override 
-    @SimulateDelay(ALWAYS)
+    @SimulateDelay(ON_BULK_READS)
     public double getVelocity(AngleUnit unit) {
-        Updater.updateAllOnce(updaters, MOTOR);
-        return super.getVelocity(unit);
+        // The simulation of delay is handled by the 0-parameter getVelocity() method.
+        final double velocityTps = this.getVelocity(); // Does simulate delay
+        final MotorData data = this.getData();         // does NOT simulate delay
+        final double velocityRadps = velocityTps / data.ticksPerRev * (2 * Math.PI); // Rads per second
+        return unit.fromRadians(velocityRadps);
     }
     
     @Override 
@@ -450,7 +463,7 @@ public class DcMotorImplExFake extends DcMotorImplEx implements Rotateable, TwoW
     public boolean isOverCurrent() {
         final String tag = "motorOverCurrent" + this.getPortNumber();
         final LynxGetBulkInputDataCommand command = new LynxGetBulkInputDataCommand(
-            ((DcMotorControllerExFake) this.getController()).getLynxModule()
+            this.getControllerFake().getLynxModule()
         );
         ModularUpdater.updateAllOnceIfAnyCacheOutdated(updaters, MOTOR, this, command, tag);
         return super.isOverCurrent();

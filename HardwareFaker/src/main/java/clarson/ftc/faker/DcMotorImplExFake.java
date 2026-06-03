@@ -263,6 +263,15 @@ public class DcMotorImplExFake extends DcMotorImplEx implements Rotateable, TwoW
     @Override
     @SimulateDelay(ON_BULK_READS)
     public boolean isBusy() {
+        // Simulating delay only if this method was called by the user, not by any 
+        // internal methods. This is done to prevent Updater.updateAll() from being 
+        // called multiple times by LynxModuleUsbDeviceImplFake.readBulkDataPayload()
+        if(this.getControllerFake().shouldReread()) {
+            return super.isBusy();
+        }
+
+        // The method was called by a user rather than an internal method; 
+        // simulate delay.
         final LynxIsMotorAtTargetCommand command = new LynxIsMotorAtTargetCommand(
             this.getControllerFake().getLynxModule(),
             this.getPortNumber()
@@ -317,10 +326,20 @@ public class DcMotorImplExFake extends DcMotorImplEx implements Rotateable, TwoW
     @Override
     @SimulateDelay(ON_BULK_READS)
     public int getCurrentPosition() {
+        // Simulating delay only if this method was called by the user, not by any 
+        // internal methods. This is done to prevent Updater.updateAll() from being 
+        // called multiple times by LynxModuleUsbDeviceImplFake.readBulkDataPayload()
+        if(this.getControllerFake().shouldReread()) {
+            return super.getCurrentPosition();
+        }
+
+        // The method was called by a user rather than an internal method; 
+        // simulate delay.
         final LynxGetMotorEncoderPositionCommand command = new LynxGetMotorEncoderPositionCommand(
             this.getControllerFake().getLynxModule(),
             this.getPortNumber()
         );
+        
         ModularUpdater.updateAllOnceIfAnyCacheOutdated(updaters, MOTOR, this, command);
         return super.getCurrentPosition();
     }
@@ -377,10 +396,20 @@ public class DcMotorImplExFake extends DcMotorImplEx implements Rotateable, TwoW
     @Override 
     @SimulateDelay(ON_BULK_READS)
     public double getVelocity() {
+        // Simulating delay only if this method was called by the user, not by any 
+        // internal methods. This is done to prevent Updater.updateAll() from being 
+        // called multiple times by LynxModuleUsbDeviceImplFake.readBulkDataPayload()
+        if(this.getControllerFake().shouldReread()) {
+            return super.getVelocity();
+        }
+
+        // The method was called by a user rather than an internal method; 
+        // simulate delay.
         final String tag = "motorVelocity" + this.getPortNumber();
         final LynxGetBulkInputDataCommand command = new LynxGetBulkInputDataCommand(
             this.getControllerFake().getLynxModule()
         );
+        
         ModularUpdater.updateAllOnceIfAnyCacheOutdated(updaters, MOTOR, this, command, tag);
         return super.getVelocity();
     }
@@ -461,10 +490,20 @@ public class DcMotorImplExFake extends DcMotorImplEx implements Rotateable, TwoW
     @Override 
     @SimulateDelay(ON_BULK_READS)
     public boolean isOverCurrent() {
+        // Simulating delay only if this method was called by the user, not by any 
+        // internal methods. This is done to prevent Updater.updateAll() from being 
+        // called multiple times by LynxModuleUsbDeviceImplFake.readBulkDataPayload()
+        if(this.getControllerFake().shouldReread()) {
+            return super.isOverCurrent();
+        }
+
+        // The method was called by a user rather than an internal method; 
+        // simulate delay.
         final String tag = "motorOverCurrent" + this.getPortNumber();
         final LynxGetBulkInputDataCommand command = new LynxGetBulkInputDataCommand(
             this.getControllerFake().getLynxModule()
         );
+        
         ModularUpdater.updateAllOnceIfAnyCacheOutdated(updaters, MOTOR, this, command, tag);
         return super.isOverCurrent();
     }

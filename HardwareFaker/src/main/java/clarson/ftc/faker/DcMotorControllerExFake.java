@@ -156,6 +156,10 @@ public class DcMotorControllerExFake implements DcMotorControllerEx {
         return oldValue != shouldReread;
     }
 
+    boolean shouldReread() {
+        return this.shouldReread;
+    }
+
     /**
      * Constructs a `LynxGetMotorEncoderCommand` with this module and the given motor
      * 
@@ -188,8 +192,8 @@ public class DcMotorControllerExFake implements DcMotorControllerEx {
         }
 
         if(getData(port).mode != DcMotor.RunMode.RUN_USING_ENCODER) {
-            // Cannot set velocity to a motor that doesn't not what velocity
-            return;
+            // Just set it to the correct mode
+            setMotorMode(port, DcMotor.RunMode.RUN_USING_ENCODER);
         }
 
         getData(port).unaffectedVelocity = ticksPerSecond;

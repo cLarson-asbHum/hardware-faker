@@ -2,9 +2,19 @@ package clarson.ftc.faker.test;
 
 // import clarson.ftc.faker.DcMotorImplExFake;
 import clarson.ftc.faker.DcMotorImplExFake;
+import clarson.ftc.faker.DcMotorControllerExFake;
+import clarson.ftc.faker.LynxModuleHardwareFake;
+import clarson.ftc.faker.LynxUsbDeviceImplFake;
+import clarson.ftc.faker.updater.Updater;
+import clarson.ftc.faker.updater.ModularUpdater;
+import clarson.ftc.faker.util.AbstractTwoWayUpdateable;
+import clarson.ftc.faker.wrapper.MotorData;
 
+import com.qualcomm.hardware.lynx.LynxModule;
+import com.qualcomm.robotcore.exception.RobotCoreException;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.LynxModuleDescription;
 import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
@@ -16,6 +26,8 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.api.function.Executable;
 import org.junit.jupiter.api.function.Executable;
 
 import org.junit.jupiter.params.Parameter;
@@ -26,6 +38,8 @@ import org.junit.jupiter.params.provider.ValueSource;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assumptions.*;
 import static clarson.ftc.faker.test.TestUtil.*; // Provides assertFloatEquals and doesThrow
+
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 @DisplayName("DcMotorImplExFake")
 class DcMotorImplExFakeUnitTest {
@@ -378,6 +392,7 @@ class DcMotorImplExFakeUnitTest {
                 assertEquals(tickVel / radsToTicks * 180 / Math.PI, motor.getVelocity(AngleUnit.DEGREES));
             }
 
+            @Disabled("This is incorrect (shown so emperically)")
             @DisplayName("Sets velocity only in RUN_USING_ENCODER")
             @Test
             void velocitySetOnlyWithEncoder() {
@@ -701,8 +716,8 @@ class DcMotorImplExFakeUnitTest {
             void isBusyTrueIfAndOnlyIf() {
                 final int target = (int) Math.round(0.25 * ticksPerRev);
 
-                // Making sure RUN_TO_POSITION reaches the specified target within 3 seconds.
-                // This is done with a 30 millisecond update rate to simulate real life latency,
+                // Making sure RUN_TO_POSITION reaches the specified target within 30 seconds.
+                // This is done with a 30 millisecond update rate to simulate real life latency;
                 // and to "reach the position", the current position must get within 5 ticks.
                 final double maxSeconds = 30.0;
                 final double updateDelaySeconds = 0.030; // 30 milliseconds
@@ -814,6 +829,882 @@ class DcMotorImplExFakeUnitTest {
         }
     }
 
-}
+    
+    @Nested
+    class UpdaterDependent {
+        private double rpm = 1000;
+        private double ticksPerRev = 1000;
 
-// * NOT A LEGALLY BINDING STATEMENT
+        private ModularUpdater updater = new ModularUpdater();
+        private DcMotorImplExFake motor;
+        private MotorData data;
+        private DcMotorControllerExFake controller;
+
+        private LynxUsbDeviceImplFake lynxUsb = new LynxUsbDeviceImplFake();
+        private LynxModuleHardwareFake lynx = null;
+   
+        private final MockUpdateable counter = new MockUpdateable();
+
+        LynxModuleHardwareFake createLynxModule(LynxUsbDeviceImplFake lynx) {
+            LynxModuleHardwareFake module = null;
+            try {
+                module = (LynxModuleHardwareFake) lynx.getOrAddModule(
+                    new LynxModuleDescription.Builder(-1, true)
+                        .setUserModule()
+                        // .setSystemSynthetic()
+                        .build()    
+                );
+            }  catch (InterruptedException unused) {
+                // Do nothing...
+            } catch(RobotCoreException err) {
+                fail("RobotCoreException caught in addLynxModule(): " + err.getMessage());
+            }
+            
+            try {
+                lynx.armOrPretend();
+            } catch(RobotCoreException | InterruptedException err) {
+                fail(err);
+            }
+
+         
+            return module;
+        }
+
+        void construct() {
+            // Creating the contoller
+            lynx = createLynxModule(lynxUsb);
+            controller = new DcMotorControllerExFake(lynx);
+        
+
+            // Constructing the motor and getting its data wrapper
+            motor = new DcMotorImplExFake(new MotorData(rpm, ticksPerRev), controller);
+            data = motor.getData();
+
+            lynxUsb.setMotors(new DcMotorImplExFake[] {
+                motor, null, null, null
+            });
+        }
+
+        @BeforeEach
+        void registerWithUpdater() {
+            construct();
+            
+            if(controller.getLynxModule() == null) {
+                fail("Controller LynxModule was null");
+            }
+
+            updater.register(motor, controller.getLynxModule());
+            updater.register(counter, controller.getLynxModule());
+        }
+
+        @DisplayName("setUpdatingEnabled and isUpdatingEnabled match")
+        @Test
+        void setAndGetUpdatingEnabledMatch() {
+            motor.setUpdatingEnabled(false);
+            assertEquals(false, motor.isUpdatingEnabled());
+            
+            motor.setUpdatingEnabled(false);
+            assertEquals(false, motor.isUpdatingEnabled());
+
+            motor.setUpdatingEnabled(true);
+            assertEquals(true, motor.isUpdatingEnabled());
+
+            motor.setUpdatingEnabled(false);
+            assertEquals(false, motor.isUpdatingEnabled());
+
+            motor.setUpdatingEnabled(true);
+            assertEquals(true, motor.isUpdatingEnabled());
+        }
+
+        /**
+         * Counts the number of times it has been updated
+         */
+        private final class MockUpdateable extends AbstractTwoWayUpdateable {
+            private int totalUpdates = 0;
+            private double lastDeltaSec = 0;
+
+            @Override
+            protected final double updateImplementation(double deltaSec) {
+                totalUpdates++;
+                lastDeltaSec = deltaSec;
+                return 1;
+            }
+
+            public final void clearCount() {
+                totalUpdates = 0;
+            }
+
+            public final int getTotalUpdates() {
+                return this.totalUpdates;
+            }
+            
+            public final double getLastDeltaSec() {
+                return this.lastDeltaSec;
+            }
+
+            /**
+             * Alias for getTotalUpdates()
+             */
+            public final int getTotalCalls() {
+                return this.getTotalUpdates();
+            }
+        }
+
+        @DisplayName("update respects setUpdatingEnabled")
+        @Test
+        void updateRespectsSetUpdatingEnabled() {
+            motor.setPower(1.0);
+            assumeTrue(rpm * ticksPerRev / 60 == data.unaffectedVelocity, "setting the power actually updates the vel");
+
+            motor.setUpdatingEnabled(true);
+            motor.update(1.0);
+            assertEquals(ticksPerRev * rpm / 60, data.position, "The position updated on true updatingEnabled");
+
+            final double pos1 = data.position;
+            motor.update(1.0);
+            assertEquals(ticksPerRev * rpm / 60, data.position - pos1, "Updating enabled didn't change");
+
+            motor.setUpdatingEnabled(true);
+            motor.setUpdatingEnabled(true);
+            motor.setUpdatingEnabled(true);
+            motor.setUpdatingEnabled(true);
+            final double pos2 = data.position;
+            motor.update(1.0);
+            assertFloatEquals(ticksPerRev * rpm / 60, data.position - pos2, 1e-10, "Repeating doesn't do anything funky");
+
+
+            motor.setUpdatingEnabled(false);
+            final double pos3 = data.position;
+            motor.update(1.0);
+            assertFloatEquals(pos3, data.position, 1e-10, "Switching to false disables position chang updating");
+            assertTrue(0 < data.unaffectedVelocity, "Velocity is still positive");
+
+            assertFloatEquals(pos3, data.position, 1e-10, "Not changing the status didn't change anything");
+            assertTrue(0 < data.unaffectedVelocity, "Velocity is still positive");
+
+            motor.setUpdatingEnabled(false);
+            motor.setUpdatingEnabled(false);
+            motor.setUpdatingEnabled(false);
+            motor.setUpdatingEnabled(false);
+            motor.update(1.0);
+            assertFloatEquals(pos3, data.position, 1e-10, "Repeated disabling does nothing");
+            assertTrue(0 < data.unaffectedVelocity, "Velocity is still positive");
+
+            motor.setUpdatingEnabled(true);
+            final double pos4 = data.position;
+            motor.update(1.0);
+            assertFloatEquals(ticksPerRev * rpm / 60, data.position - pos4, 1e-10, "Repeating doesn't do anything funky");
+
+        }
+
+        @DisplayName("forget removes updater internally; remember adds it back")
+        @Test
+        void forgetRemovesRememberAdds() {
+            motor.getCurrentPosition();
+            assertEquals(1, counter.getTotalUpdates(), "is registered initially");
+            
+            motor.forget(updater);
+            motor.getCurrentPosition();
+            assertEquals(1, counter.getTotalUpdates(), "updater no longer updated by motor");
+
+            motor.getCurrentPosition();
+            motor.getCurrentPosition();
+            motor.getCurrentPosition();
+            assertEquals(1, counter.getTotalUpdates(), "updater still no longer updated by motor");
+
+            motor.remember(updater);
+            motor.getCurrentPosition();
+            assertEquals(2, counter.getTotalUpdates(), "updater now is updated by motor");
+            
+            motor.getCurrentPosition();
+            motor.getCurrentPosition();
+            motor.getCurrentPosition();
+            assertEquals(5, counter.getTotalUpdates(), "updater still is updated by motor");
+        }
+
+        @DisplayName("Current Position equals accumulated delta on off")
+        @Test
+        void currentPositionEqualsAccumulatedDeltaOnOff() {
+            lynx.setBulkCachingMode(LynxModule.BulkCachingMode.OFF);
+
+            final double speed = 0.76 * rpm * ticksPerRev / 60; /* Ticks per sec */
+            motor.getData().unaffectedVelocity = speed;
+
+            double accumulated = 0;
+            for(int i = 0; i < 10; i++) {
+                lynx.clearBulkCache();
+                accumulated += speed * Updater.UpdateDelaySource.MOTOR.length;
+                System.out.println("[cur pos on off] accumulated: " + accumulated);
+                // We multiply by 100 because the time step is small emought to round to zero
+                assertEquals((int) Math.round(accumulated), motor.getCurrentPosition());
+            }
+        }
+
+        @DisplayName("Current Position equals accumulated delta on manual (when cleared)")
+        @Test
+        void currentPositionEqualsAccumulatedDeltaOnManual() {
+            lynx.setBulkCachingMode(LynxModule.BulkCachingMode.MANUAL);
+
+            final double speed = 0.76 * rpm * ticksPerRev / 60; /* Ticks per sec */
+            motor.getData().unaffectedVelocity = speed;
+
+            double accumulated = 0;
+            for(int i = 0; i < 10; i++) {
+                lynx.clearBulkCache();
+                accumulated += speed * Updater.UpdateDelaySource.MOTOR.length;
+                System.out.println("[cur pos on manual] accumulated: " + accumulated);
+                // We multiply by 100 because the time step is small emought to round to zero
+                assertEquals((int) Math.round(accumulated), motor.getCurrentPosition());
+            }
+        }
+        @DisplayName("Current Position equals accumulated delta on automatic")
+        @Test
+        void currentPositionEqualsAccumulatedDeltaOnAuto() {
+            lynx.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
+
+            final double speed = 0.76 * rpm * ticksPerRev / 60; /* Ticks per sec */
+            motor.getData().unaffectedVelocity = speed;
+
+            double accumulated = 0;
+            for(int i = 0; i < 10; i++) {
+                accumulated += speed * Updater.UpdateDelaySource.MOTOR.length;
+                System.out.println("[cur pos on auto] accumulated: " + accumulated);
+                assertEquals((int) Math.round(accumulated), motor.getCurrentPosition());
+            }
+        }
+
+        @DisplayName("getCurrentPosition updates automatically when registered with an updater")
+        @Test
+        void getCurrentPositionUpdatesAutomaticallyWhenRegistered() {
+            // Number of ticks that progress per update (at power == 1.0):
+            final double pStep = rpm * ticksPerRev / 60 * Updater.UpdateDelaySource.MOTOR.length;
+            motor.setPower(1.0);
+
+            counter.clearCount();
+            assertEquals((int) Math.round(pStep), motor.getCurrentPosition(), "Expected initial value is correct");
+            assertEquals(1, counter.getTotalUpdates());
+
+            assertEquals((int) Math.round(2 * pStep), motor.getCurrentPosition(), "Value did change without needing an update");
+            assertEquals(2, counter.getTotalUpdates());
+
+            for(int i = 2; i < 7; i++) {
+                assertEquals((int) Math.round(pStep * (1 + 2 * i - 2)), motor.getCurrentPosition(), i + "-th value matches expected");
+                assertEquals(1 + 2 * (i - 1), counter.getTotalUpdates());
+                
+                assertEquals((int) Math.round(pStep * (2 + 2 * i - 2)), motor.getCurrentPosition(), i + "-th value did change");
+                assertEquals(2 + 2 * (i - 1), counter.getTotalUpdates());
+            }
+        }
+
+        @DisplayName("getCurrentPosition delays always when bulk caching is off")
+        @Test
+        void getCurrentPositionDelaysWhenBulkCachingDisabled() {
+            // Number of ticks that progress per update (at power == 1.0):
+            final double pStep = rpm * ticksPerRev / 60 * Updater.UpdateDelaySource.MOTOR.length;
+            motor.setPower(1.0);
+
+            counter.clearCount();
+            assertEquals((int) Math.round(pStep), motor.getCurrentPosition(), "Expected initial value is correct");
+            assertEquals(1, counter.getTotalUpdates());
+
+            assertEquals((int) Math.round(2 * pStep), motor.getCurrentPosition(), "Value did change without needing an update");
+            assertEquals(2, counter.getTotalUpdates());
+
+            for(int i = 2; i < 7; i++) {
+                assertEquals((int) Math.round(pStep * (1 + 2 * i - 2)), motor.getCurrentPosition(), i + "-th value matches expected");
+                assertEquals(1 + 2 * (i - 1), counter.getTotalUpdates());
+                
+                assertEquals((int) Math.round(pStep * (2 + 2 * i - 2)), motor.getCurrentPosition(), i + "-th value did change");
+                assertEquals(2 + 2 * (i - 1), counter.getTotalUpdates());
+            }
+        }
+        
+        @DisplayName("getCurrentPosition delays (the correct time) only on clear cache in MANUAL")
+        @Test
+        void getCurrentPositionDelaysOnlyWhenClearManual() {
+            // Number of ticks that progress per update (at power == 1.0):
+            final double pStep = rpm * ticksPerRev / 60 * Updater.UpdateDelaySource.MOTOR.length;
+            motor.setPower(1.0);
+
+            System.out.println("=============================");
+            lynx.setBulkCachingMode(LynxModule.BulkCachingMode.MANUAL);
+
+            counter.clearCount();
+            assertEquals((int) Math.round(pStep), motor.getCurrentPosition(), "Expected initial value is correct");
+            System.out.println("=============================");
+            assertEquals(1, counter.getTotalUpdates());
+
+            assertEquals((int) Math.round(pStep), motor.getCurrentPosition(), "Expected initial value didnt change");
+            assertEquals(1, counter.getTotalUpdates());
+
+            lynx.clearBulkCache();
+            final double secondState = motor.getCurrentPosition();
+            assertEquals(2, counter.getTotalUpdates());
+            assertEquals((int) Math.round(2 * pStep), secondState, "Value did change after clearing cache");
+
+            System.out.println();
+            for(int i = 2; i < 7; i++) {
+                lynx.clearBulkCache();
+                assertEquals((int) Math.round(pStep * (1 + 2 * i - 2)), motor.getCurrentPosition(), i + "-th value matches expected");
+                assertEquals(1 + 2 * (i - 1), counter.getTotalUpdates());
+                
+                assertEquals((int) Math.round(pStep * (1 + 2 * i - 2)), motor.getCurrentPosition(), i + "-th value did not change");
+                assertEquals(1 + 2 * (i - 1), counter.getTotalUpdates());
+                
+                lynx.clearBulkCache();
+                assertEquals((int) Math.round(pStep * (2 + 2 * i - 2)), motor.getCurrentPosition(), i + "-th value did change");
+                assertEquals(2 + 2 * (i - 1), counter.getTotalUpdates());
+            }
+        }
+        
+        @DisplayName("getCurrentPosition delays only on repeat invokation in AUTOMATIC")
+        @Test
+        void getCurrentPositionDelaysOnlyWhenRepeatedInAuto() {
+            final DcMotorImplExFake motor2 = new DcMotorImplExFake(
+                new MotorData(rpm, ticksPerRev, 0),
+                controller
+            );
+            
+            updater.register(motor2, lynx);
+            lynxUsb.setMotors(new DcMotorImplExFake[] { motor, motor2, null, null });
+            
+            // Number of ticks that progress per update (at power == 1.0):
+            final double pStep = rpm * ticksPerRev / 60 * Updater.UpdateDelaySource.MOTOR.length;
+            motor.setPower(1.0);
+            motor2.setPower(1.0);
+            lynx.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
+
+            // Reseting the counts and positions because previous methods may have accidnetally changed them
+            counter.clearCount();
+            motor.getData().position = 0;
+            motor2.getData().position = 0;
+
+            // Performing the tests
+            System.out.println("*****************************");
+            assertEquals((int) Math.round(pStep), motor.getCurrentPosition(), "Expected initial value is correct");
+            assertEquals(1, counter.getTotalUpdates());
+            
+            final double secondState = motor2.getCurrentPosition();
+            assertEquals(1, counter.getTotalUpdates());
+            assertEquals((int) Math.round(pStep), secondState, "Value not did change after using other method");
+
+            final double thirdState = motor.getCurrentPosition();
+            System.out.println("*****************************");
+            assertEquals(2, counter.getTotalUpdates());
+            assertEquals((int) Math.round(2 * pStep), thirdState, "Value did change after repeating");
+
+            final double fourthState = motor2.getCurrentPosition();
+            assertEquals(2, counter.getTotalUpdates());
+            assertEquals((int) Math.round(2 * pStep), fourthState, "Value not did change after using other method");
+
+            System.out.println();
+            for(int i = 2; i < 7; i++) {
+                assertEquals((int) Math.round(pStep * (1 + 2 * (i - 1))), motor.getCurrentPosition(), i + "-th value matches expected");
+                assertEquals(1 + 2 * (i - 1), counter.getTotalUpdates());
+                
+                assertEquals((int) Math.round(pStep * (1 + 2 * (i - 1))), motor2.getCurrentPosition(), i + "-th value did not change");
+                assertEquals(1 + 2 * (i - 1), counter.getTotalUpdates());
+                
+                assertEquals((int) Math.round(pStep * (2 + 2 * (i - 1))), motor.getCurrentPosition(), i + "-th value did change");
+                assertEquals(2 + 2 * (i - 1), counter.getTotalUpdates());
+            }
+        }
+    
+        @DisplayName("getVelocity is accurately represented in all Bulk Cache modes")
+        @Test
+        void getVelocityAccuratelyRepresentedOnAllModes() {
+            final double[] vels = { 210.9, 0.0, -314.2 };
+            for(final double vel : vels) {
+                motor.setVelocity(vel);
+            
+                // Doing the tests
+                // NOTE: Because bulk caching stores the vels as shorts, OFF is the only one which is a double.
+                lynx.setBulkCachingMode(LynxModule.BulkCachingMode.OFF);
+                assertEquals(vel,                               motor.getVelocity(), "Velocity is correct on OOF"); // intentional typo ????
+                assertEquals(vel / ticksPerRev * 360,           motor.getVelocity(AngleUnit.DEGREES), "Velocity is correct on OOF");
+                assertEquals(vel / ticksPerRev * (2 * Math.PI), motor.getVelocity(AngleUnit.RADIANS), "Velocity is correct on OOF");
+
+                lynx.setBulkCachingMode(LynxModule.BulkCachingMode.MANUAL);
+                lynx.clearBulkCache();
+                assertEquals(Math.round(vel),                               motor.getVelocity(), "Velocity is correct on MANUAL");
+                assertEquals(Math.round(vel) / ticksPerRev * 360,           motor.getVelocity(AngleUnit.DEGREES), "Velocity is correct on MANUAL");
+                assertEquals(Math.round(vel) / ticksPerRev * (2 * Math.PI), motor.getVelocity(AngleUnit.RADIANS), "Velocity is correct on MANUAL");
+
+                lynx.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
+                lynx.clearBulkCache();
+                assertEquals(Math.round(vel),                               motor.getVelocity(), "Velocity is correct on AUTO");
+                assertEquals(Math.round(vel) / ticksPerRev * 360,           motor.getVelocity(AngleUnit.DEGREES), "Velocity is correct on AUTO");
+                assertEquals(Math.round(vel) / ticksPerRev * (2 * Math.PI), motor.getVelocity(AngleUnit.RADIANS), "Velocity is correct on AUTO");
+
+            }
+        }
+        
+        @DisplayName("getVelocity updates automatically when registered with an updater")
+        @Test
+        void getVelocityUpdatesAutomaticallyWhenRegistered() {
+            // Number of ticks that progress per update (at power == 1.0):
+            motor.setPower(1.0);
+
+            counter.clearCount();
+            motor.getVelocity();
+            assertEquals(1, counter.getTotalUpdates());
+
+            motor.getVelocity();
+            assertEquals(2, counter.getTotalUpdates());
+
+            for(int i = 2; i < 7; i++) {
+                motor.getVelocity();
+                assertEquals(3 + 3 * (i - 2), counter.getTotalUpdates());
+                
+                motor.getVelocity(AngleUnit.DEGREES);
+                assertEquals(4 + 3 * (i - 2), counter.getTotalUpdates());
+
+                motor.getVelocity(AngleUnit.RADIANS);
+                assertEquals(5 + 3 * (i - 2), counter.getTotalUpdates());
+            }
+        }
+
+        @DisplayName("getVelocity delays always when bulk caching is off")
+        @Test
+        void getVelocityDelaysWhenBulkCachingDisabled() {
+            // Number of ticks that progress per update (at power == 1.0):
+            motor.setPower(1.0);
+
+            counter.clearCount();
+            motor.getVelocity();
+            assertEquals(1, counter.getTotalUpdates());
+
+            motor.getVelocity(); // Should always be ticks / sec
+            assertEquals(2, counter.getTotalUpdates());
+
+            for(int i = 2; i < 7; i++) {
+                
+                motor.getVelocity();
+                assertEquals(3 + 3 * (i - 2), counter.getTotalUpdates());
+                
+                motor.getVelocity(AngleUnit.DEGREES);
+                assertEquals(4 + 3 * (i - 2), counter.getTotalUpdates());
+
+                motor.getVelocity(AngleUnit.RADIANS);
+                assertEquals(5 + 3 * (i - 2), counter.getTotalUpdates());
+            }
+        }
+        
+        @DisplayName("getVelocity delays (the correct time) only on clear cache in MANUAL")
+        @Test
+        void getVelocityDelaysOnlyWhenClearManual() {
+            motor.setPower(1.0);
+            lynx.setBulkCachingMode(LynxModule.BulkCachingMode.MANUAL);
+
+            // Reseting the counts and positions because previous methods may have accidnetally changed them
+            counter.clearCount();
+
+            // Performing the tests
+            motor.getVelocity();
+            assertEquals(1, counter.getTotalUpdates());
+            
+            motor.getVelocity();
+            assertEquals(1, counter.getTotalUpdates());
+
+            lynx.clearBulkCache();
+            motor.getVelocity();
+            assertEquals(2, counter.getTotalUpdates());
+
+            for(int i = 2; i < 7; i++) {
+                lynx.clearBulkCache();
+                motor.getVelocity();
+                assertEquals(3 + 3 * (i - 2), counter.getTotalUpdates());
+                
+                lynx.clearBulkCache();
+                motor.getVelocity(AngleUnit.DEGREES);
+                assertEquals(4 + 3 * (i - 2), counter.getTotalUpdates());
+                
+                motor.getVelocity(AngleUnit.RADIANS);
+                assertEquals(4 + 3 * (i - 2), counter.getTotalUpdates());
+
+                lynx.clearBulkCache();
+                motor.getVelocity(AngleUnit.RADIANS);
+                assertEquals(5 + 3 * (i - 2), counter.getTotalUpdates());
+            }
+        }
+        
+        @DisplayName("getVelocity delays only on repeat invokation in AUTOMATIC")
+        @Test
+        void getVelocityDelaysOnlyWhenRepeatedInAuto() {
+            final DcMotorImplExFake motor2 = new DcMotorImplExFake(
+                new MotorData(rpm, ticksPerRev, 0),
+                controller
+            );
+            
+            updater.register(motor2, lynx);
+            lynxUsb.setMotors(new DcMotorImplExFake[] { motor, motor2, null, null });
+            
+            // Number of ticks that progress per update (at power == 1.0):
+            motor.setPower(1.0);
+            motor2.setPower(1.0);
+            lynx.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
+
+            // Reseting the counts and positions because previous methods may have accidnetally changed them
+            counter.clearCount();
+            motor.getData().position = 0;
+            motor2.getData().position = 0;
+
+            // Performing the tests
+            motor.getVelocity();
+            assertEquals(1, counter.getTotalUpdates());
+            
+            motor2.getVelocity();
+            assertEquals(1, counter.getTotalUpdates());
+
+            // ??? An automatic update occurred
+            motor.getVelocity();
+            assertEquals(2, counter.getTotalUpdates());
+
+            motor2.getVelocity();
+            assertEquals(2, counter.getTotalUpdates());
+
+            for(int i = 2; i < 7; i++) {
+                // ??? An automatic update occurred
+                motor.getVelocity();
+                assertEquals(3 + 3 * (i - 2), counter.getTotalUpdates());
+
+                motor2.getVelocity();
+                assertEquals(3 + 3 * (i - 2), counter.getTotalUpdates());
+                
+                // ??? An automatic update occurred
+                motor.getVelocity(AngleUnit.DEGREES);
+                assertEquals(4 + 3 * (i - 2), counter.getTotalUpdates());
+                
+                motor2.getVelocity(AngleUnit.DEGREES);
+                assertEquals(4 + 3 * (i - 2), counter.getTotalUpdates());
+
+                // ??? An automatic update occurred
+                motor.getVelocity(AngleUnit.RADIANS);
+                assertEquals(5 + 3 * (i - 2), counter.getTotalUpdates());
+
+                motor2.getVelocity(AngleUnit.RADIANS);
+                assertEquals(5 + 3 * (i - 2), counter.getTotalUpdates());
+            }
+        }
+    
+        @Timeout(value = 3, unit = SECONDS, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
+        @DisplayName("isBusy is read correctly on OFF")
+        @Test
+        void isBusyFunctionsAutomaticallyOnOff() {
+            final int target = (int) Math.round(25 * ticksPerRev);
+
+            // Making sure RUN_TO_POSITION reaches the specified target within 30 seconds.
+            // This is done with a 30 millisecond update rate to simulate real life latency;
+            // and to "reach the position", the current position must get within 5 ticks.
+            final double maxSeconds = 30.0;
+            final double updateDelaySeconds = Updater.UpdateDelaySource.MOTOR.length;
+            final int tolerance = 5; // Ticks
+
+            assertFalse(motor.isBusy());
+
+            motor.setTargetPositionTolerance(tolerance);
+            motor.setTargetPosition(target);
+            motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            motor.setPower(1.0);
+            lynx.setBulkCachingMode(LynxModule.BulkCachingMode.OFF);
+
+            double t = 0;
+            while(
+                Math.abs(motor.getData().position - target) >= tolerance 
+                && t < maxSeconds
+            ) {
+                // assertEquals(DcMotor.RunMode.RUN_TO_POSITION, motor.getMode());
+                // lynx.clearBulkCache();
+                // System.out.println("[isBusy on manual] t: " + t);
+
+                /*
+                 *  Because the value of isBusy comes *after* the automatic update, 
+                 *  the motor can move into tolerance of the target, and thus it could 
+                 *  reasonably return false inside this iteration.
+                 *  
+                 *  Thus, we check that if it does return false, that it is returning false 
+                 *  because the motor is within target. In other words:
+                 *  
+                 *  - If isBusy() returns true, continue the loop.
+                 *  - If isBusy() returns false, assert that the motor is within tolerance 
+                 *      of the target  
+                 */
+                final boolean isCurrentlyBusy = motor.isBusy();
+                if(!isCurrentlyBusy) {
+                    // Verify that it is returning false because it genuinely is no longer busy.
+                    assertFalse(Math.abs(motor.getData().position - target) >= tolerance);
+                } else {
+                    // True is expected; continue without error.
+                }
+                t += updateDelaySeconds;
+            }
+            
+            System.out.println("[isBusy on OFF] t: " + t);
+            System.out.println("[isBusy on OFF] currentPos: " + motor.getCurrentPosition());
+            System.out.println("[isBusy on OFF] target: " + target);
+            System.out.println("[isBusy on OFF] tolerance: " + tolerance);
+            System.out.println("[isBusy on OFF] isBusy: " + motor.isBusy());
+
+            assertTrue(t < maxSeconds); // Making sure the loop didn't timeout.
+            assertFalse(motor.isBusy());
+
+            motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            assertFalse(motor.isBusy());
+        }
+    
+        @Timeout(value = 3, unit = SECONDS, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
+        @DisplayName("isBusy is read correctly on MANUAL")
+        @Test
+        void isBusyFunctionsAutomaticallyOnManual() {
+            final int target = (int) Math.round(2.5 * ticksPerRev);
+
+            // Making sure RUN_TO_POSITION reaches the specified target within 30 seconds.
+            // This is done with a 30 millisecond update rate to simulate real life latency;
+            // and to "reach the position", the current position must get within 5 ticks.
+            final double maxSeconds = 5;
+            final double updateDelaySeconds = Updater.UpdateDelaySource.MOTOR.length;
+            final int tolerance = 5; // Ticks
+
+            assertFalse(motor.isBusy());
+
+            motor.setTargetPositionTolerance(tolerance);
+            motor.setTargetPosition(target);
+            motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            motor.setPower(1.0);
+            lynx.setBulkCachingMode(LynxModule.BulkCachingMode.MANUAL);
+
+            counter.clearCount();
+            double t = 0;
+            while(
+                Math.abs(motor.getData().position - target) >= tolerance 
+                && t < maxSeconds
+            ) {
+                // System.out.println("[isBusy on MANUAL] t: " + t);
+                // System.out.println("[isBusy on MANUAL] counter calls: " + counter.getTotalCalls());
+                // System.out.println("[isBusy on MANUAL] pos: " + motor.getData().position);
+                
+                /*
+                 *  Because the value of isBusy comes *after* the automatic update, 
+                 *  the motor can move into tolerance of the target, and thus it could 
+                 *  reasonably return false inside this iteration.
+                 *  
+                 *  Thus, we check that if it does return false, that it is returning false 
+                 *  because the motor is within target. In other words:
+                 *  
+                 *  - If isBusy() returns true, continue the loop.
+                 *  - If isBusy() returns false, assert that the motor is within tolerance 
+                 *      of the target  
+                 */
+                lynx.clearBulkCache();
+                final boolean isCurrentlyBusy = motor.isBusy();
+                if(!isCurrentlyBusy) {
+                    // Verify that it is returning false because it genuinely is no longer busy.
+                    assertFalse(Math.abs(motor.getData().position - target) >= tolerance);
+                } else {
+                    // True is expected; continue without error.
+                }
+                t += updateDelaySeconds;
+            }
+            
+            System.out.println("[isBusy on MANUAL] t: " + t);
+            System.out.println("[isBusy on MANUAL] currentPos: " + motor.getCurrentPosition());
+            System.out.println("[isBusy on MANUAL] target: " + target);
+            System.out.println("[isBusy on MANUAL] tolerance: " + tolerance);
+            System.out.println("[isBusy on MANUAL] isBusy: " + motor.isBusy());
+
+            lynx.clearBulkCache();
+            assertTrue(t < maxSeconds); // Making sure the loop didn't timeout.
+            assertFalse(motor.isBusy());
+
+            motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            assertFalse(motor.isBusy());
+        }
+    
+        @Timeout(value = 3, unit = SECONDS, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
+        @DisplayName("isBusy is read correctly on AUTO")
+        @Test
+        void isBusyFunctionsAutomaticallyOnAuto() {
+            final int target = (int) Math.round(2.5 * ticksPerRev);
+
+            // Making sure RUN_TO_POSITION reaches the specified target within 30 seconds.
+            // This is done with a 30 millisecond update rate to simulate real life latency;
+            // and to "reach the position", the current position must get within 5 ticks.
+            final double maxSeconds = 5;
+            final double updateDelaySeconds = Updater.UpdateDelaySource.MOTOR.length;
+            final int tolerance = 5; // Ticks
+
+            assertFalse(motor.isBusy());
+
+            motor.setTargetPositionTolerance(tolerance);
+            motor.setTargetPosition(target);
+            motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            motor.setPower(1.0);
+            lynx.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
+
+            double t = 0;
+            while(
+                Math.abs(motor.getData().position - target) >= tolerance 
+                && t < maxSeconds
+            ) {
+                /*
+                 *  Because the value of isBusy comes *after* the automatic update, 
+                 *  the motor can move into tolerance of the target, and thus it could 
+                 *  reasonably return false inside this iteration.
+                 *  
+                 *  Thus, we check that if it does return false, that it is returning false 
+                 *  because the motor is within target. In other words:
+                 *  
+                 *  - If isBusy() returns true, continue the loop.
+                 *  - If isBusy() returns false, assert that the motor is within tolerance 
+                 *      of the target  
+                 */
+                // lynx.clearBulkCache();
+                final boolean isCurrentlyBusy = motor.isBusy();
+                if(!isCurrentlyBusy) {
+                    // Verify that it is returning false because it genuinely is no longer busy.
+                    assertFalse(Math.abs(motor.getData().position - target) >= tolerance);
+                } else {
+                    // True is expected; continue without error.
+                }
+                t += updateDelaySeconds;
+            }
+            
+            System.out.println("[isBusy on AUTO] t: " + t);
+            System.out.println("[isBusy on AUTO] currentPos: " + motor.getCurrentPosition());
+            System.out.println("[isBusy on AUTO] target: " + target);
+            System.out.println("[isBusy on AUTO] tolerance: " + tolerance);
+            System.out.println("[isBusy on AUTO] isBusy: " + motor.isBusy());
+
+            lynx.clearBulkCache();
+            assertTrue(t < maxSeconds); // Making sure the loop didn't timeout.
+            assertFalse(motor.isBusy());
+
+            motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            assertFalse(motor.isBusy());
+        }
+        
+        @DisplayName("isBusy delays always when bulk caching is off")
+        @Test
+        void isBusyDelaysWhenBulkCachingDisabled() {
+            // Number of ticks that progress per update (at power == 1.0):
+            motor.setPower(1.0);
+
+            counter.clearCount();
+            motor.isBusy();
+            assertEquals(1, counter.getTotalUpdates());
+
+            motor.isBusy(); // Should always be ticks / sec
+            assertEquals(2, counter.getTotalUpdates());
+
+            for(int i = 2; i < 7; i++) {
+                
+                motor.isBusy();
+                assertEquals(3 + 3 * (i - 2), counter.getTotalUpdates());
+                
+                motor.isBusy();
+                assertEquals(4 + 3 * (i - 2), counter.getTotalUpdates());
+
+                motor.isBusy();
+                assertEquals(5 + 3 * (i - 2), counter.getTotalUpdates());
+            }
+        }
+        
+        @DisplayName("isBusy delays (the correct time) only on clear cache in MANUAL")
+        @Test
+        void isBusyDelaysOnlyWhenClearManual() {
+            motor.setPower(1.0);
+            lynx.setBulkCachingMode(LynxModule.BulkCachingMode.MANUAL);
+
+            // Reseting the counts and positions because previous methods may have accidnetally changed them
+            counter.clearCount();
+
+            // Performing the tests
+            motor.isBusy();
+            assertEquals(1, counter.getTotalUpdates());
+            
+            motor.isBusy();
+            assertEquals(1, counter.getTotalUpdates());
+
+            lynx.clearBulkCache();
+            motor.isBusy();
+            assertEquals(2, counter.getTotalUpdates());
+
+            for(int i = 2; i < 7; i++) {
+                lynx.clearBulkCache();
+                motor.isBusy();
+                assertEquals(3 + 3 * (i - 2), counter.getTotalUpdates());
+                
+                lynx.clearBulkCache();
+                motor.isBusy();
+                assertEquals(4 + 3 * (i - 2), counter.getTotalUpdates());
+                
+                motor.isBusy();
+                assertEquals(4 + 3 * (i - 2), counter.getTotalUpdates());
+
+                lynx.clearBulkCache();
+                motor.isBusy();
+                assertEquals(5 + 3 * (i - 2), counter.getTotalUpdates());
+            }
+        }
+        
+        @DisplayName("isBusy delays only on repeat invokation in AUTOMATIC")
+        @Test
+        void isBusyDelaysOnlyWhenRepeatedInAuto() {
+            final DcMotorImplExFake motor2 = new DcMotorImplExFake(
+                new MotorData(rpm, ticksPerRev, 0),
+                controller
+            );
+            
+            updater.register(motor2, lynx);
+            lynxUsb.setMotors(new DcMotorImplExFake[] { motor, motor2, null, null });
+            
+            // Number of ticks that progress per update (at power == 1.0):
+            motor.setPower(1.0);
+            motor2.setPower(1.0);
+            lynx.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
+
+            // Reseting the counts and positions because previous methods may have accidnetally changed them
+            counter.clearCount();
+            motor.getData().position = 0;
+            motor2.getData().position = 0;
+
+            // Performing the tests
+            motor.isBusy();
+            assertEquals(1, counter.getTotalUpdates());
+            
+            motor2.isBusy();
+            assertEquals(1, counter.getTotalUpdates());
+
+            // ??? An automatic update occurred
+            motor.isBusy();
+            assertEquals(2, counter.getTotalUpdates());
+
+            motor2.isBusy();
+            assertEquals(2, counter.getTotalUpdates());
+
+            for(int i = 2; i < 7; i++) {
+                // ??? An automatic update occurred
+                motor.isBusy();
+                assertEquals(3 + 3 * (i - 2), counter.getTotalUpdates());
+
+                motor2.isBusy();
+                assertEquals(3 + 3 * (i - 2), counter.getTotalUpdates());
+                
+                // ??? An automatic update occurred
+                motor.isBusy();
+                assertEquals(4 + 3 * (i - 2), counter.getTotalUpdates());
+                
+                motor2.isBusy();
+                assertEquals(4 + 3 * (i - 2), counter.getTotalUpdates());
+
+                // ??? An automatic update occurred
+                motor.isBusy();
+                assertEquals(5 + 3 * (i - 2), counter.getTotalUpdates());
+
+                motor2.isBusy();
+                assertEquals(5 + 3 * (i - 2), counter.getTotalUpdates());
+            }
+        }
+    
+    }
+}

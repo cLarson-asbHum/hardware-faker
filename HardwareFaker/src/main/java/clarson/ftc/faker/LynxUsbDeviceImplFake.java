@@ -246,7 +246,7 @@ public class LynxUsbDeviceImplFake extends LynxUsbDeviceImpl {
             } 
 
             // Serializing the encoder position as a little endian int.
-            ((DcMotorControllerExFake) motor.getController()).setForceReread(true);  // Preventing infinite recursion
+            motor.getControllerFake().setForceReread(true);  // Preventing infinite recursion
 
             final int encoderPosition = motor.getCurrentPosition();
             payload[ENCODER_START + 4 * i]     = getByte(encoderPosition, 0);
@@ -267,7 +267,7 @@ public class LynxUsbDeviceImplFake extends LynxUsbDeviceImpl {
             final int isAtTargetBit = (!motor.isBusy() ? 1 : 0) << (i + 4);
             payload[STATUS_START] = (byte) (payload[STATUS_START] | isOverCurrentBit | isAtTargetBit);
 
-            ((DcMotorControllerExFake) motor.getController()).setForceReread(false);
+            motor.getControllerFake().setForceReread(false);
         }
 
         // Validating and reading the analog input        
@@ -293,9 +293,9 @@ public class LynxUsbDeviceImplFake extends LynxUsbDeviceImpl {
 
         
         //#region DEV START: Logging the payload
-        for(int i = 0; i < payload.length; i++) {
-            System.out.println("    [read bulk payload] byte: " + payload[i]);
-        }
+        // for(int i = 0; i < payload.length; i++) {
+        //     System.out.println("    [read bulk payload] byte: " + payload[i]);
+        // }
         
         //#endregion DEV END
 

@@ -1,0 +1,39 @@
+plugins {
+    id 'jvm-test-suite'
+}
+
+apply plugin: 'com.android.application'
+
+android {
+    namespace "clarson.ftc.faker"
+
+    compileSdk 34
+
+    defaultConfig {
+        minSdkVersion 24
+        targetSdkVersion 28
+    }
+
+    testOptions {
+        unitTests.returnDefaultValues = true
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    implementation 'org.firstinspires.ftc:RobotCore:11.1.0'
+    implementation 'org.firstinspires.ftc:Hardware:11.1.0'
+    implementation 'androidx.appcompat:appcompat:1.2.0'
+    
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.13.4'
+    testRuntimeOnly 'org.junit.platform:junit-platform-engine:1.13.4'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.13.4'
+}
+
+tasks.withType(Test) {
+    useJUnitPlatform()
+}

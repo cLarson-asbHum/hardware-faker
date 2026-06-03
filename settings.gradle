@@ -6,4 +6,4 @@
  */
 
 rootProject.name = 'hardware-faker'
-include('core')
+include('HardwareFaker')

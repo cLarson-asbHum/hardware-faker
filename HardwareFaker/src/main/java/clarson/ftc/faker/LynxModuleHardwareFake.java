@@ -1,3 +1,25 @@
+/**
+ * LynxModuleHardwareFake.java
+ * 
+ * This source class contains methods which are under the copyright ownership of 
+ * Robert Atkinson. Such methods are subject to the BSD 3-clause license. 
+ * 
+ * Except where noted, this file is subject to the following license: 
+ *
+ * Copyright 2026 Connor Larson
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package clarson.ftc.faker;
 
 import com.qualcomm.hardware.lynx.commands.core.LynxDekaInterfaceCommand;
@@ -32,9 +54,9 @@ public class LynxModuleHardwareFake extends LynxModule {
         super(usbDevice, moduleAddress, isParent, isUser);
     }
 
-    /**
-     * This method "recordBulkCachingCommandIntent", modified from the original source form,
-     * is subject to the following:
+    /*
+     * The following method, "recordBulkCachingCommandIntent", is modified from 
+     * the original source code (see NOTICE) and is subject to the following terms:
      * 
      * Copyright (c) 2016 Robert Atkinson
      * 
@@ -102,9 +124,10 @@ public class LynxModuleHardwareFake extends LynxModule {
         }
     }
 
-    /**
-     * This method "wouldIssueBulkData", copied and subseqeuntly modified 
-     * from "recordBulkCachingIntent", is subject to the following:
+    /*
+     * The following method, "wouldIssueBulkData", being copied from 
+     * "recordBulkCachingIntent" and subsequently modified, is subject to the 
+     * following terms:
      * 
      * Copyright (c) 2016 Robert Atkinson
      * 

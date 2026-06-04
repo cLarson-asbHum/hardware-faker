@@ -1,36 +1,39 @@
-// This is the point at which I realized that another team (#9929 Tech Ninja Team) 
-// has done almost the exact same thing as this library. The difference is that mine
-// simulates hardware (e.g. the rotation of a motor), while their library seems to 
-// only pretend the hardware exists. 
-//
-// This is most evident in methods such as DcMotor.getCurrentPosition. TNT's library,
-// as far as I can tell, throws an exception, indicating that the functionality has
-// not been implemented. This library, however, does return a number, and if the 
-// update() method has been called, with can be just about any value.
-// 
-// NO CODE HAS BEEN COPIED, REPLICATED, OR IN ANY WAY MODIFIED FROM SAID LIBRARY 
-// "FakeHardware", WHICH IS UNDER THE AUTHORSHIP OF TECH NINJA TEAM (FIRST TECH 
-// CHALLENGE TEAM #9929). ANY SIMILARITIES, UNLESS EXPRESSLY NOTED IN SOURCE CODE 
-// OR LICENSE, ARE PURELY COINCIDENTAL. 
+/*
+ * XmlHardwareFakeFactory.java
+ * 
+ * Copyright 2026 Connor Larson
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package clarson.ftc.faker.util;
 
 // TODO: Add more hardware!
-// import clarson.ftc.faker.AnalogInputFake;
 // import clarson.ftc.faker.AnalogInputContollerFake;
+// import clarson.ftc.faker.AnalogInputFake;
 import clarson.ftc.faker.CRServoImplExFake;
-import clarson.ftc.faker.ContinuousServoData;
 import clarson.ftc.faker.DcMotorControllerExFake;
 import clarson.ftc.faker.DcMotorImplExFake;
-// import clarson.ftc.faker.DigitalChannelFake;
 // import clarson.ftc.faker.DigitalChannelControllerFake;
+// import clarson.ftc.faker.DigitalChannelFake;
 import clarson.ftc.faker.LynxModuleHardwareFake;
 import clarson.ftc.faker.LynxUsbDeviceImplFake;
-import clarson.ftc.faker.MotorData;
-import clarson.ftc.faker.PositionalServoData;
 import clarson.ftc.faker.ServoControllerExFake;
 import clarson.ftc.faker.ServoImplExFake;
 import clarson.ftc.faker.updater.ModularUpdater;
+import clarson.ftc.faker.wrapper.ContinuousServoData;
+import clarson.ftc.faker.wrapper.MotorData;
+import clarson.ftc.faker.wrapper.PositionalServoData;
 
 import com.qualcomm.robotcore.exception.RobotCoreException;
 import com.qualcomm.robotcore.hardware.HardwareDevice;

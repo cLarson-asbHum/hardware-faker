@@ -19,9 +19,9 @@
 package clarson.ftc.faker.wrapper;
 
 import clarson.ftc.faker.DigitalChannelImplFake;
+import clarson.ftc.faker.function.TimedStateGetter;
 import clarson.ftc.faker.updater.Updateable;
 import clarson.ftc.faker.util.EasyTimedStateGetter;
-import clarson.ftc.faker.util.TimedStateGetter;
 
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 

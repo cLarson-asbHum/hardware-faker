@@ -1,5 +1,5 @@
 /*
- * ColorRangeGetter.java
+ * DistanceGetter.java
  * 
  * Copyright 2026 Connor Larson
  * 
@@ -16,8 +16,10 @@
  * limitations under the License.
  */
 
-package clarson.ftc.faker.util;
+package clarson.ftc.faker.function;
 
-public interface ColorRangeGetter extends TimedDistanceGetter, ColorGetter {
-    // No new methods
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+
+public interface DistanceGetter {
+    double getDistance(DistanceUnit units);
 }

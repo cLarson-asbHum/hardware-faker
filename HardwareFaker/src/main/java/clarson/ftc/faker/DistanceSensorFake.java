@@ -20,10 +20,10 @@ package clarson.ftc.faker;
 
 import clarson.ftc.faker.updater.SimulateDelay;
 
+import clarson.ftc.faker.function.DistanceGetter;
+import clarson.ftc.faker.function.TimedDistanceGetter;
 import clarson.ftc.faker.updater.TwoWayUpdateable;
 import clarson.ftc.faker.updater.Updater;
-import clarson.ftc.faker.util.DistanceGetter;
-import clarson.ftc.faker.util.TimedDistanceGetter;
 import clarson.ftc.faker.wrapper.SensorFakeBase;
 
 import static clarson.ftc.faker.updater.UpdatesWhen.ALWAYS;

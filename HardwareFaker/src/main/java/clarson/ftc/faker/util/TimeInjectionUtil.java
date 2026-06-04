@@ -18,6 +18,7 @@
 
 package clarson.ftc.faker.util;
 
+import clarson.ftc.faker.function.ThreadSleepMethod;
 import clarson.ftc.faker.updater.Updater;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;

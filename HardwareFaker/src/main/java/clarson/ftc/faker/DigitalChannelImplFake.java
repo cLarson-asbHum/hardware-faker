@@ -18,12 +18,12 @@
 
 package clarson.ftc.faker;
 
+import clarson.ftc.faker.function.TimedStateGetter;
 import clarson.ftc.faker.updater.Updater;
-import clarson.ftc.faker.util.TimedStateGetter;
-import clarson.ftc.faker.util.EasyTimedStateGetter;
 import clarson.ftc.faker.updater.TwoWayUpdateable;
 import clarson.ftc.faker.updater.ModularUpdater;
 import clarson.ftc.faker.updater.SimulateDelay;
+import clarson.ftc.faker.util.EasyTimedStateGetter;
 import clarson.ftc.faker.wrapper.DigitalChannelData;
 
 import static clarson.ftc.faker.updater.UpdatesWhen.ALWAYS;

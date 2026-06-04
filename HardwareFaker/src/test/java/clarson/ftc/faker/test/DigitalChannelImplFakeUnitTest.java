@@ -23,12 +23,12 @@ import clarson.ftc.faker.DigitalChannelControllerFake;
 import clarson.ftc.faker.DigitalChannelImplFake;
 import clarson.ftc.faker.LynxModuleHardwareFake;
 import clarson.ftc.faker.LynxUsbDeviceImplFake;
+import clarson.ftc.faker.function.TimedStateGetter;
 import clarson.ftc.faker.updater.ModularUpdater;
 import clarson.ftc.faker.updater.Updateable;
 import clarson.ftc.faker.updater.Updater;
 import clarson.ftc.faker.util.AbstractTwoWayUpdateable;
 import clarson.ftc.faker.util.EasyTimedStateGetter;
-import clarson.ftc.faker.util.TimedStateGetter;
 import clarson.ftc.faker.util.UpdateableSupplier;
 import clarson.ftc.faker.wrapper.DigitalChannelData;
 

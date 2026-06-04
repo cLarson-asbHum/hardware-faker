@@ -1,5 +1,5 @@
-<!-- [![Build](https://github.com/cLarson-asbHum/ftc-summer-25/actions/workflows/gradle-build.yaml/badge.svg?branch=sim-updater)](https://github.com/cLarson-asbHum/ftc-summer-25/actions/workflows/gradle-build.yaml)
-[![Unit Tests](https://github.com/cLarson-asbHum/ftc-summer-25/actions/workflows/gradle-test.yaml/badge.svg?branch=sim-updater)](https://github.com/cLarson-asbHum/ftc-summer-25/actions/workflows/gradle-test.yaml) -->
+<!-- [![Build](https://github.com/cLarson-asbHum/ftc-summer-25/actions/workflows/gradle-build.yaml/badge.svg?branch=sim-updater)](https://github.com/cLarson-asbHum/ftc-summer-25/actions/workflows/gradle-build.yaml) -->
+[![Tests](https://github.com/cLarson-asbHum/hardware-faker/actions/workflows/gradle-test.yaml/badge.svg?branch=main)](https://github.com/cLarson-asbHum/ftc-summer-25/actions/workflows/gradle-test.yaml)
 
 <!--
 ## Table of Contents

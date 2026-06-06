@@ -19,7 +19,7 @@
 package clarson.ftc.faker.test.util;
 
 import clarson.ftc.faker.util.EasyTimedStateGetter;
-import clarson.ftc.faker.util.TimedStateGetter;
+import clarson.ftc.faker.function.TimedStateGetter;
 
 import static clarson.ftc.faker.test.TestUtil.*;
 

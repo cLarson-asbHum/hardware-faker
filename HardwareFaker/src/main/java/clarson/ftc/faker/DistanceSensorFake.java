@@ -20,10 +20,11 @@ package clarson.ftc.faker;
 
 import clarson.ftc.faker.updater.SimulateDelay;
 
+import clarson.ftc.faker.function.DistanceGetter;
+import clarson.ftc.faker.function.TimedDistanceGetter;
 import clarson.ftc.faker.updater.TwoWayUpdateable;
 import clarson.ftc.faker.updater.Updater;
-import clarson.ftc.faker.util.DistanceGetter;
-import clarson.ftc.faker.util.TimedDistanceGetter;
+import clarson.ftc.faker.util.EasyTimedDistanceGetter;
 import clarson.ftc.faker.wrapper.SensorFakeBase;
 
 import static clarson.ftc.faker.updater.UpdatesWhen.ALWAYS;
@@ -46,47 +47,29 @@ public class DistanceSensorFake extends SensorFakeBase<TimedDistanceGetter> impl
     /**
      * Creates a distance sensor whose getDistance() is implemented by the given 
      * object. The given object is converted to a TimedDistanceGetter that can never be 
-     * updated (gotcha: its `isUpdatingEnabled()` method can return true, although this functionally 
-     * means nothing).
+     * updated The values for `getDistancec()` are obtained from the provided 
+     * distanceGetter argument everytime update() is called.
+     * 
+     * A channel constructed from this constructor must be updated for 
+     * new values to be obtained from getDistance(). This can occur automatically 
+     * if the channel is connected to an updater, but this may not be the case 
+     * if the channel was constructed manually (i.e., not obtained from a 
+     * HardwareMap). 
      * 
      * @param distanceSupplier What is called every time DistanceSensorFake.getDistance() is called
      */
     public DistanceSensorFake(DistanceGetter distanceGetter) {
-        this(new TimedDistanceGetter() {
-            private boolean isUpdatingEnabled = true;
-
-            @Override
-            public double getDistance(DistanceUnit units) {
-                return distanceGetter.getDistance(units);
-            }
-
-            @Override
-            public double update(double deltaSec) {
-                // This does nothing by default; return 0.
-                return 0;
-            }
-
-            @Override
-            public boolean isUpdatingEnabled() {
-                return isUpdatingEnabled;
-            }
-
-            @Override
-            public boolean setUpdatingEnabled(boolean newUpdatingEnabled) {
-                final boolean oldValue = isUpdatingEnabled;
-                this.isUpdatingEnabled = newUpdatingEnabled;
-                return oldValue != newUpdatingEnabled;
-            }
-        });
+        this(new EasyTimedDistanceGetter(distanceGetter));
     }
     
     /**
      * Creates a distance sensor whose getDistance() is implemented by the given 
      * object. The given distance getter is updated every call to DistanceSensorFake.update.
      * 
-     * NOTE: The given distance getter can be added to an Updater if the getter's `setIsUpdatingEnabled()` 
-     * and `update()` methods are implemented correctly. This allows the getter to only be updated once
-     * per call to `Updater.updateAllOnlyOnce()`, as intended.
+     * NOTE: EasyTimedDistanceGetters only have different values for `getDistance()`
+     * if they are updated through their `update()` method, which is called 
+     * internally by DigitalChannelImplFake's update() method. This is normally 
+     * done automatically if the digital channel is connected to 
      * 
      * @param distanceSupplier What is called every time DistanceSensorFake.getDistance() is called
      */

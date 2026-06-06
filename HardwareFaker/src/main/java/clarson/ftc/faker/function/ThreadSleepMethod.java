@@ -1,5 +1,5 @@
 /*
- * TimedDistanceGetter.java
+ * ThreadSleepMethod.java
  * 
  * Copyright 2026 Connor Larson
  * 
@@ -16,12 +16,8 @@
  * limitations under the License.
  */
 
-package clarson.ftc.faker.util;
+package clarson.ftc.faker.function;
 
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-
-import clarson.ftc.faker.updater.Updateable;
-
-public interface TimedDistanceGetter extends DistanceGetter, Updateable {
-    // No new methods
+public interface ThreadSleepMethod {
+    void accept(long millis, int nanos) throws InterruptedException;
 }

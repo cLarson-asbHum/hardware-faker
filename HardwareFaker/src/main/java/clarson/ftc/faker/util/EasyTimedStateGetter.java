@@ -18,6 +18,8 @@
 
 package clarson.ftc.faker.util;
 
+import clarson.ftc.faker.function.TimedStateGetter;
+
 import java.util.function.BooleanSupplier;
 import java.util.function.Function;
 

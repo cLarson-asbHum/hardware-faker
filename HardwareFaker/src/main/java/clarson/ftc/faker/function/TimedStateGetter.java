@@ -1,5 +1,5 @@
 /*
- * DistanceGetter.java
+ * TimedStateGetter.java
  * 
  * Copyright 2026 Connor Larson
  * 
@@ -16,10 +16,17 @@
  * limitations under the License.
  */
 
-package clarson.ftc.faker.util;
+package clarson.ftc.faker.function;
 
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import clarson.ftc.faker.updater.Updateable;
 
-public interface DistanceGetter {
-    double getDistance(DistanceUnit units);
+import java.util.function.BooleanSupplier;
+
+public interface TimedStateGetter extends BooleanSupplier, Updateable {
+    /**
+     * Alias for `getAsBoolean()`.
+     */
+    default public boolean getState() {
+        return getAsBoolean();
+    }
 }

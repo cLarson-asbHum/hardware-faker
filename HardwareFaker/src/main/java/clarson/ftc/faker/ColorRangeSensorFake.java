@@ -20,12 +20,12 @@ package clarson.ftc.faker;
 
 import androidx.annotation.ColorInt;
 
+import clarson.ftc.faker.function.ColorGetter;
+import clarson.ftc.faker.function.ColorRangeGetter;
+import clarson.ftc.faker.function.DistanceGetter;
 import clarson.ftc.faker.updater.SimulateDelay;
 import clarson.ftc.faker.updater.TwoWayUpdateable;
 import clarson.ftc.faker.updater.Updater;
-import clarson.ftc.faker.util.ColorGetter;
-import clarson.ftc.faker.util.ColorRangeGetter;
-import clarson.ftc.faker.util.DistanceGetter;
 import clarson.ftc.faker.util.NoImplementationError;
 import clarson.ftc.faker.wrapper.SensorFakeBase;
 

@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package clarson.ftc.faker.util;
+package clarson.ftc.faker.function;
 
 import androidx.annotation.ColorInt;
 

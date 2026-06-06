@@ -22,6 +22,7 @@ import clarson.ftc.faker.function.DistanceGetter;
 import clarson.ftc.faker.function.TimedDistanceGetter;
 
 import java.util.function.BiFunction;
+import java.util.function.DoubleSupplier;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
@@ -49,6 +50,27 @@ public final class EasyTimedDistanceGetter extends UpdateableSupplier<Double> im
      */
     public EasyTimedDistanceGetter(DistanceGetter supplier) {
         this((DistanceUnit unit, Double unused) -> supplier.getDistance(unit));
+    }
+    
+    /**
+     * Constructs a TimedDistanceGetter whose getDistance() method return
+     * values obtained from invoking the provided supplier. Construction invokes the 
+     * Double generator, and the first return value from it will be used as the return of 
+     * the new TimedDistanceGetter's getDistance() method until update() is 
+     * called succesfully (i.e. updating is enabled and the provided deltaSec argument was 
+     * not 0).
+     * 
+     * Becuase the provided DistanceGetter takes no Double parameters, the generation of 
+     * the distances is independent of the time.
+     * 
+     * The default units of the `get()` method are given by the static `DEFAULT_UNIT` 
+     * field. 
+     * 
+     * @param supplier What determines the return value of getDistance(). The supplier's
+     * units are assumed to be DEFAULT_UNIT.
+     */
+    public EasyTimedDistanceGetter(DoubleSupplier supplier) {
+        this((DistanceUnit unit, Double unused) -> unit.fromUnit(DEFAULT_UNIT, supplier.getAsDouble()));
     }
 
     /**

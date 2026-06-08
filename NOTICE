@@ -5,12 +5,19 @@ The Initial Developer of certain methods in LynxModuleHardwareFake.java and
 LynxUsbDeviceImplFake.java, derived and modified from the FTC Hardware project
 (https://mvnrepository.com/artifact/org.firstinspires.ftc/Hardware/11.0.0), 
 is Robert Atkins (Copyright (c) 2016. All rights reserved). Such methods are 
-subject to the BSD-3 Clause license and include the following methods:
+subject to the BSD 3-Clause license and include the following methods:
 
-  - recordBulkCachingCommandIntent  (HardwareFaker/src/main/java/clarson/ftc/faker/LynxModuleHardwareFake.java)
-  - wouldIssueBulkData              (HardwareFaker/src/main/java/clarson/ftc/faker/LynxModuleHardwareFake.java)
-  - armDevice       (HardwareFaker/src/main/java/clarson/ftc/faker/LynxUsbDeviceImplFake.java)
-  - getOrAddModule  (HardwareFaker/src/main/java/clarson/ftc/faker/LynxUsbDeviceImplFake.java)
+  - recordBulkCachingCommandIntent  (./HardwareFaker/src/main/java/clarson/ftc/faker/LynxModuleHardwareFake.java)
+  - wouldIssueBulkData              (./HardwareFaker/src/main/java/clarson/ftc/faker/LynxModuleHardwareFake.java)
+  - armDevice       (./HardwareFaker/src/main/java/clarson/ftc/faker/LynxUsbDeviceImplFake.java)
+  - getOrAddModule  (./HardwareFaker/src/main/java/clarson/ftc/faker/LynxUsbDeviceImplFake.java)
 
 The Initial Developer of the top-level-directory build.gradle source file is FIRST 
 (https://www.firstinspires.org/). Copyright (c) 2014-2022 FIRST. All rights reserved.
+
+The Initial Developer of the method "getNormalizedColors" in 
+ColorRangeSensorFake.java (found in ./HardwareFaker/src/main/java/clarson/ftc/faker/), 
+derived and modified from the FTC Hardware project
+(https://mvnrepository.com/artifact/org.firstinspires.ftc/Hardware/11.0.0),
+is REV Robotics LLC (Copyright (c) 2019. All rights reserved). The method 
+"getNormalizedColors" is subject to the BSD 3-Clause license.

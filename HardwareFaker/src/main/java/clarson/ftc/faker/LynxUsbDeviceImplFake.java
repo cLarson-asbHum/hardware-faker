@@ -1,7 +1,7 @@
 /**
  * LynxUsbDeviceImplFake.java
  * 
- * This source class contains methods which are under the copyright ownership of 
+ * This source file contains methods which are under the copyright ownership of 
  * Robert Atkinson. Such methods are subject to the BSD 3-clause license.
  * 
  * Except where noted, this file is subject to the following license: 

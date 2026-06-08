@@ -18,9 +18,11 @@
 
 package clarson.ftc.faker.function;
 
+import java.util.function.IntSupplier;
+
 import androidx.annotation.ColorInt;
 
-public interface ColorGetter {
+public interface ColorGetter extends IntSupplier {
     /**
      * Gets an RGBA color whose hex matches the form `0xAARRGGBB` (written here 
      * in big endian). 
@@ -29,4 +31,9 @@ public interface ColorGetter {
      */
     @ColorInt
     public int getColor();
+
+    @Override
+    default int getAsInt() {
+        return this.getColor();
+    }
 }

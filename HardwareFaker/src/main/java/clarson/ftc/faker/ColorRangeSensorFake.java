@@ -31,6 +31,7 @@ import clarson.ftc.faker.function.DistanceGetter;
 import clarson.ftc.faker.updater.SimulateDelay;
 import clarson.ftc.faker.updater.TwoWayUpdateable;
 import clarson.ftc.faker.updater.Updater;
+import clarson.ftc.faker.util.EasyColorRangeGetter;
 import clarson.ftc.faker.util.NoImplementationError;
 import clarson.ftc.faker.wrapper.SensorFakeBase;
 
@@ -55,36 +56,7 @@ public class ColorRangeSensorFake extends SensorFakeBase<ColorRangeGetter> imple
     private double softwareGain = 1.0;
 
     public ColorRangeSensorFake(DistanceGetter distanceGetter, ColorGetter colorGetter) {
-        this(new ColorRangeGetter() {
-            private boolean isEnabled = true;
-
-            @Override
-            public double getDistance(DistanceUnit unit) {
-                return distanceGetter.getDistance(unit);
-            }
-
-            @Override
-            public int getColor() {
-                return colorGetter.getColor();
-            }
-
-            @Override
-            public boolean isUpdatingEnabled() {
-                return isEnabled;
-            }
-
-            @Override
-            public boolean setUpdatingEnabled(boolean newValue) {
-                final boolean oldValue = isEnabled;
-                isEnabled = newValue;
-                return oldValue != newValue;
-            }
-
-            @Override
-            public double update(double deltaSec) {
-                return 0;
-            }
-        });
+        this(new EasyColorRangeGetter(distanceGetter, colorGetter));
     }
 
     public ColorRangeSensorFake(ColorRangeGetter crGetter) {

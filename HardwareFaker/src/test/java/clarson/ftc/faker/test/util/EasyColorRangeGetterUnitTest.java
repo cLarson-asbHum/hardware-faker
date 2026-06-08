@@ -1,5 +1,5 @@
 /*
- * EasyTimedDistanceGetterUnitTest.java
+ * EasyColorRangeGetterUnitTest.java
  * 
  * Copyright 2026 Connor Larson
  * 
@@ -18,9 +18,10 @@
 
 package clarson.ftc.faker.test.util;
 
-import clarson.ftc.faker.util.EasyTimedDistanceGetter;
+import clarson.ftc.faker.util.EasyColorRangeGetter;
+import clarson.ftc.faker.function.ColorGetter;
+import clarson.ftc.faker.function.ColorRangeGetter;
 import clarson.ftc.faker.function.DistanceGetter;
-import clarson.ftc.faker.function.TimedDistanceGetter;
 
 import static clarson.ftc.faker.test.TestUtil.*;
 
@@ -44,28 +45,31 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.junit.jupiter.params.provider.EnumSource;
 
-class EasyTimedDistanceGetterUnitTest {
+class EasyColorRangeGetterUnitTest {
     @DisplayName("Can Construct")
     @Test
     void canConstruct() {
-        assertDoesNotThrow(() -> new EasyTimedDistanceGetter((unused) -> 31.4));
-        assertDoesNotThrow(() -> new EasyTimedDistanceGetter((unused) -> 0.0));
-        assertDoesNotThrow(() -> new EasyTimedDistanceGetter((unused) -> Math.random()));
-        assertDoesNotThrow(() -> new EasyTimedDistanceGetter((units) -> units.fromInches(Math.random())));
+        assertDoesNotThrow(() -> new EasyColorRangeGetter((u) -> 31.4, () -> 0xBADBED));
+        assertDoesNotThrow(() -> new EasyColorRangeGetter((u) -> 0.0, () -> 0xBADBED));
+        assertDoesNotThrow(() -> new EasyColorRangeGetter((u) -> Math.random(), () -> 0xBADBED));
+        assertDoesNotThrow(() -> new EasyColorRangeGetter((units) -> units.fromInches(Math.random()), () -> 0xBADBED));
 
-        assertDoesNotThrow(() -> new EasyTimedDistanceGetter((unused, deltaSec) -> 0.0));
-        assertDoesNotThrow(() -> new EasyTimedDistanceGetter((unused, deltaSec) -> deltaSec));
-        assertDoesNotThrow(() -> new EasyTimedDistanceGetter((unused, deltaSec) -> 2 * deltaSec));
-        assertDoesNotThrow(() -> new EasyTimedDistanceGetter((units, deltaSec) -> units.fromMm(2 * deltaSec)));
+        assertDoesNotThrow(() -> new EasyColorRangeGetter((u, d) -> 0.0, (u) -> 0xDEDBEE));
+        assertDoesNotThrow(() -> new EasyColorRangeGetter((u, deltaSec) -> deltaSec, (u) -> 0xDEDBEE));
+        assertDoesNotThrow(() -> new EasyColorRangeGetter((u, deltaSec) -> 2 * deltaSec, (u) -> 0xDEDBEE));
+        assertDoesNotThrow(
+                () -> new EasyColorRangeGetter((units, deltaSec) -> units.fromMm(2 * deltaSec), (u) -> 0xDEDBEE));
     }
 
     private static final double UNUSED = 0;
+    private static final ColorGetter NO_COLOR = () -> 0;
+    private static final DistanceGetter NO_DIST = (units) -> units.fromInches(0.0);
 
     @DisplayName("Initial isUpdating is true")
     @Test
     void initialIsUpdatingIsTrue() {
         for(int i = 0; i < 10; i++) {
-            final TimedDistanceGetter distance = new EasyTimedDistanceGetter((units) -> UNUSED);
+            final ColorRangeGetter distance = new EasyColorRangeGetter(NO_DIST, NO_COLOR);
             assertEquals(true, distance.isUpdatingEnabled(), "initial isUpdatingEnabled is true even for the " + i + "-th construction");
         }
     }
@@ -73,46 +77,52 @@ class EasyTimedDistanceGetterUnitTest {
     @DisplayName("SetUpdatingEnabled matches with isUpdatingEnabled")
     @Test
     void setUpdatingEnabledMatchesGetter() {
-        final TimedDistanceGetter distanceGetterDistance = new EasyTimedDistanceGetter((units) -> UNUSED);
-        final TimedDistanceGetter generatorDistance = new EasyTimedDistanceGetter((units, deltaSec) -> UNUSED);
+        final ColorRangeGetter colorRangeGetterDistance = new EasyColorRangeGetter(NO_DIST, NO_COLOR);
+        final ColorRangeGetter generatorDistance = new EasyColorRangeGetter(NO_DIST, NO_COLOR);
 
-        distanceGetterDistance.setUpdatingEnabled(false);
+        colorRangeGetterDistance.setUpdatingEnabled(false);
         generatorDistance.setUpdatingEnabled(false);
-        assertEquals(false, distanceGetterDistance.isUpdatingEnabled(), "initial set to false");
+        assertEquals(false, colorRangeGetterDistance.isUpdatingEnabled(), "initial set to false");
         assertEquals(false, generatorDistance.isUpdatingEnabled(), "initial set to false");
 
 
-        distanceGetterDistance.setUpdatingEnabled(false);
+        colorRangeGetterDistance.setUpdatingEnabled(false);
         generatorDistance.setUpdatingEnabled(false);
-        assertEquals(false, distanceGetterDistance.isUpdatingEnabled(), "setting to false twice does nothing");
+        assertEquals(false, colorRangeGetterDistance.isUpdatingEnabled(), "setting to false twice does nothing");
         assertEquals(false, generatorDistance.isUpdatingEnabled(), "setting to false twice does nothing");
 
 
-        distanceGetterDistance.setUpdatingEnabled(true);
+        colorRangeGetterDistance.setUpdatingEnabled(true);
         generatorDistance.setUpdatingEnabled(true);
-        assertEquals(true, distanceGetterDistance.isUpdatingEnabled(), "changing to true is good");
+        assertEquals(true, colorRangeGetterDistance.isUpdatingEnabled(), "changing to true is good");
         assertEquals(true, generatorDistance.isUpdatingEnabled(), "changing to true is good");
 
 
-        assertEquals(true, distanceGetterDistance.isUpdatingEnabled(), "not changing anything changes nothing");
+        assertEquals(true, colorRangeGetterDistance.isUpdatingEnabled(), "not changing anything changes nothing");
         assertEquals(true, generatorDistance.isUpdatingEnabled(), "not changing anything changes nothing");
 
-        distanceGetterDistance.setUpdatingEnabled(false);
+        colorRangeGetterDistance.setUpdatingEnabled(false);
         generatorDistance.setUpdatingEnabled(false);
-        assertEquals(false, distanceGetterDistance.isUpdatingEnabled(), "going back to false returns false");
+        assertEquals(false, colorRangeGetterDistance.isUpdatingEnabled(), "going back to false returns false");
         assertEquals(false, generatorDistance.isUpdatingEnabled(), "going back to false returns false");
     }
 
     /**
      * Count the number of times it's getAsBoolean() method has been solved
      */
-    private class CountingDistanceGetter implements DistanceGetter {
+    private class CountingUntimedColorRange implements ColorGetter, DistanceGetter {
         private int totalCalls = 0;
 
         @Override
         public double getDistance(DistanceUnit units) {
             totalCalls++;
-            return units.fromInches(UNUSED);
+            return NO_DIST.getDistance(units);
+        }
+
+        @Override
+        public int getColor() {
+            totalCalls++;
+            return NO_COLOR.getColor();
         }
 
         public int getTotalCalls() {
@@ -123,8 +133,8 @@ class EasyTimedDistanceGetterUnitTest {
     @DisplayName("update accurately respects setUpdatingEnabled")
     @Test
     void updateRespectedSetUpdatingEnabled() {
-        final CountingDistanceGetter supplier = new CountingDistanceGetter();
-        final TimedDistanceGetter distance = new EasyTimedDistanceGetter(supplier);
+        final CountingUntimedColorRange supplier = new CountingUntimedColorRange();
+        final ColorRangeGetter distance = new EasyColorRangeGetter(supplier, NO_COLOR);
 
         assertEquals(1, supplier.getTotalCalls(), "The supplier is called once by construction");
 
@@ -154,8 +164,8 @@ class EasyTimedDistanceGetterUnitTest {
     @DisplayName("update returns 0 upon failure and 1 upon success") 
     @Test
     void updateReturns0UponFailureAnd1ForSuccess() {
-        final CountingDistanceGetter supplier = new CountingDistanceGetter();
-        final TimedDistanceGetter distance = new EasyTimedDistanceGetter(supplier);
+        final CountingUntimedColorRange supplier = new CountingUntimedColorRange();
+        final ColorRangeGetter distance = new EasyColorRangeGetter(supplier, NO_COLOR);
 
         distance.setUpdatingEnabled(true);
         assertEquals(0, distance.update(0.0), "0 is returned for a failure with a deltaSec of 0");
@@ -171,17 +181,17 @@ class EasyTimedDistanceGetterUnitTest {
     @DisplayName("getDistance accurately respects the given units")
     @Test
     void getDistanceRespectsGivenUnits() {
-        // The getter's units are specified by EasyTimedDistanceGetter.DEFAULT_UNIT
+        // The getter's units are specified by EasyColorRangeGetter.DEFAULT_UNIT
         final DistanceGetter getter = (units) -> units.fromInches(1);
-        final TimedDistanceGetter timed = new EasyTimedDistanceGetter(getter);
+        final ColorRangeGetter timed = new EasyColorRangeGetter(getter, NO_COLOR);
 
-        final double inDefault = timed.getDistance(EasyTimedDistanceGetter.DEFAULT_UNIT);
+        final double inDefault = timed.getDistance(EasyColorRangeGetter.DEFAULT_UNIT);
         final double inInch    = timed.getDistance(DistanceUnit.INCH);
         final double inMm      = timed.getDistance(DistanceUnit.MM);
         final double inCm      = timed.getDistance(DistanceUnit.CM);
         final double inMeter   = timed.getDistance(DistanceUnit.METER);
 
-        assumeTrue(EasyTimedDistanceGetter.DEFAULT_UNIT == DistanceUnit.INCH, "The default units are inches");
+        assumeTrue(EasyColorRangeGetter.DEFAULT_UNIT == DistanceUnit.INCH, "The default units are inches");
 
         // assertNotEquals(inDefault, inInch, "Converts from default to inches");
         assertNotEquals(inDefault, inMm,    "Converts from default to mm");

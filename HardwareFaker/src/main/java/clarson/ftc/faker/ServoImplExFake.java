@@ -30,6 +30,8 @@ import clarson.ftc.faker.updater.Updater;
 import clarson.ftc.faker.wrapper.PositionalServoData;
 
 import static clarson.ftc.faker.updater.UpdatesWhen.ALWAYS;
+import static clarson.ftc.faker.updater.UpdatesWhen.CONDITIONAL;
+import static clarson.ftc.faker.updater.UpdatesWhen.NEVER;
 import static clarson.ftc.faker.updater.Updater.UpdateDelaySource.SERVO;
 
 import java.util.HashSet;
@@ -98,11 +100,9 @@ public class ServoImplExFake extends ServoImplEx implements Rotateable, TwoWayUp
     }
 
     public PositionalServoData getData() {
-        // What is this, Lisp?
-        return (PositionalServoData) (
-            ((ServoControllerExFake) this.getController())
-                .getData(this.getPortNumber())
-        );
+        return (PositionalServoData) (this
+            .getControllerFake()
+            .getData(this.getPortNumber()));
     }
 
     @Override
@@ -140,22 +140,41 @@ public class ServoImplExFake extends ServoImplEx implements Rotateable, TwoWayUp
         this.updaters.remove(updater);
     }
 
+    public ServoControllerExFake getControllerFake() {
+        return (ServoControllerExFake) super.getController();
+    }
+
     // #############################################################################
     //   NOTE: The following section only is super methods with delay simulation
     //         Nothing below is more informative than its Javadoc
     // #############################################################################
     
+    /**
+     * Simulates delay only when the set position is different form the last known 
+     * position
+     * 
+     * @param position
+     */
     @Override 
-    @SimulateDelay(ALWAYS)
+    @SimulateDelay(CONDITIONAL)
     public void setPosition(double position) {
-        Updater.updateAllOnce(updaters, SERVO);
+        final ServoControllerExFake controller = this.getControllerFake();
+        final int port = this.getPortNumber();
+        final double lastKnown = controller.lastKnownPosition(port);
+        controller.enableDry(true); // Prevent the position fom actually being changed
         super.setPosition(position);
+        controller.enableDry(false);
+        final double newPos = controller.lastKnownPosition(port);
+
+        if(newPos != lastKnown) {
+            Updater.updateAllOnce(updaters, SERVO);
+            super.setPosition(position);
+        } 
     }
     
     @Override 
-    @SimulateDelay(ALWAYS)
+    @SimulateDelay(NEVER)
     public double getPosition() {
-        Updater.updateAllOnce(updaters, SERVO);
         return super.getPosition();
     }
     

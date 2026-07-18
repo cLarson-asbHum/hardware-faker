@@ -32,6 +32,8 @@ import clarson.ftc.faker.updater.Updater;
 import clarson.ftc.faker.wrapper.ContinuousServoData;
 
 import static clarson.ftc.faker.updater.UpdatesWhen.ALWAYS;
+import static clarson.ftc.faker.updater.UpdatesWhen.CONDITIONAL;
+import static clarson.ftc.faker.updater.UpdatesWhen.NEVER;
 import static clarson.ftc.faker.updater.Updater.UpdateDelaySource.SERVO;
 
 
@@ -135,22 +137,39 @@ public class CRServoImplExFake extends CRServoImplEx implements Rotateable, TwoW
         this.updaters.remove(updater);
     }
 
+    public ServoControllerExFake getControllerFake() {
+        return (ServoControllerExFake) super.getController();
+    }
+
     // #############################################################################
     //   NOTE: The following section only is super methods with delay simulation
     //         Nothing below is more informative than its Javadoc
     // #############################################################################
     
+    /**
+     * Updates only when the power is different from the last known power
+     * @param power
+     */
     @Override 
-    @SimulateDelay(ALWAYS)
+    @SimulateDelay(CONDITIONAL)
     public void setPower(double power) {
-        Updater.updateAllOnce(updaters, SERVO);
+        final ServoControllerExFake controller = this.getControllerFake();
+        final int port = this.getPortNumber();
+        final double lastKnown = controller.lastKnownPosition(port);
+        controller.enableDry(true); // Prevent the power fom actually being changed
         super.setPower(power);
+        controller.enableDry(false);
+        final double newPos = controller.lastKnownPosition(port);
+
+        if(newPos != lastKnown) {
+            Updater.updateAllOnce(updaters, SERVO);
+            super.setPower(power);
+        } 
     }
     
     @Override 
-    @SimulateDelay(ALWAYS)
+    @SimulateDelay(NEVER)
     public double getPower() {
-        Updater.updateAllOnce(updaters, SERVO);
         return super.getPower();
     }
     

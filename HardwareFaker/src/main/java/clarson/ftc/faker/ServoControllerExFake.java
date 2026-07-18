@@ -31,6 +31,7 @@ import com.qualcomm.robotcore.hardware.ServoImplEx;
 import com.qualcomm.robotcore.hardware.configuration.typecontainers.ServoConfigurationType;
 import com.qualcomm.robotcore.util.Range;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -39,7 +40,15 @@ import java.util.Map;
 import static com.qualcomm.robotcore.hardware.PwmControl.PwmRange;
 
 public class ServoControllerExFake implements ServoControllerEx {
-    protected Map<Integer, ServoData> servos = new HashMap<>(6, 1.0f);
+    protected ServoData[] servos = new ServoData[6];
+    protected double[] lastKnown = clearedLastKnowns();
+    private boolean enableDry = false;
+
+    private static double[] clearedLastKnowns() {
+        final double[] cleared = { Double.NaN, Double.NaN, Double.NaN, 
+                Double.NaN, Double.NaN, Double.NaN };
+            return cleared;
+    }
     
     /**
      * Constructs a new ServoControllerExFake with the given servos instantly
@@ -64,7 +73,7 @@ public class ServoControllerExFake implements ServoControllerEx {
      * @return Whether the port exists and is unnoccupied.
      */
     public boolean isPortAvailable(int portNumber) {
-        return !servos.containsKey(portNumber) && portNumber >= 0 && portNumber <= 5;
+        return servos[portNumber] == null && portNumber >= 0 && portNumber <= 5;
     }
 
     /**
@@ -92,7 +101,7 @@ public class ServoControllerExFake implements ServoControllerEx {
             return false;
         }
 
-        servos.put(portNumber, servoData);
+        servos[portNumber] = servoData;
         return true;
     }
     
@@ -110,7 +119,7 @@ public class ServoControllerExFake implements ServoControllerEx {
             return false;
         }
 
-        servos.put(portNumber, servoData);
+        servos[portNumber] = servoData;
         return true;
     }
 
@@ -122,11 +131,11 @@ public class ServoControllerExFake implements ServoControllerEx {
      * @return The servo data at the given port.
      */
     public ServoData getData(int port) {
-        if(!servos.containsKey(port)) {
+        if(servos[port] == null) {
             throw new IllegalArgumentException("Attempted to access unconnected port <" + port + ">.");
         }
 
-        return servos.get(port);
+        return servos[port];
     }
     
     /**
@@ -139,7 +148,7 @@ public class ServoControllerExFake implements ServoControllerEx {
      * @return The continuous servo at the given port.
      */
     public CRServoImplEx getContinuousServo(int port) {
-        if(!servos.containsKey(port)) {
+        if(servos[port] == null) {
             throw new IllegalArgumentException("Attempted to access unconnected port <" + port + ">.");
         }
 
@@ -161,7 +170,7 @@ public class ServoControllerExFake implements ServoControllerEx {
      * @return The positional servo at the given port.
      */
     public ServoImplEx getPositionalServo(int port) {
-        if(!servos.containsKey(port)) {
+        if(servos[port] == null) {
             throw new IllegalArgumentException("Attempted to access unconnected port <" + port + ">.");
         }
 
@@ -175,30 +184,28 @@ public class ServoControllerExFake implements ServoControllerEx {
 
     @Override
     public void pwmEnable() {
-        servos.values().forEach(servo -> {
+        Arrays.spliterator(servos).forEachRemaining(servo -> {
             servo.isEnabled = true;
         });
     }
 
     @Override
     public void pwmDisable() {
-        servos.values().forEach(servo -> {
+        Arrays.spliterator(servos).forEachRemaining(servo -> {
             servo.isEnabled = false;
         });
     }
 
     @Override
     public PwmStatus getPwmStatus() {
-        if(servos.size() == 0) {
+        if(servos.length == 0) {
             return PwmStatus.MIXED;
         }
 
         // Checking if any of the `isEnabled`s are different from the first.
-        final ServoData[] servoData = servos.values().toArray(new ServoData[servos.size()]);
-        boolean firstIsEnabled = servoData[0].isEnabled;
-
-        for(int i = 1; i < servoData.length; i++) {
-            if(servoData[i].isEnabled != firstIsEnabled) {
+        boolean firstIsEnabled = servos[0].isEnabled;
+        for(int i = 1; i < servos.length; i++) {
+            if(servos[i].isEnabled != firstIsEnabled) {
                 return PwmStatus.MIXED;
             }
         }
@@ -217,18 +224,16 @@ public class ServoControllerExFake implements ServoControllerEx {
             return;
         }
 
+        lastKnown[portNumber] = position;
+        if(enableDry) {
+            return;
+        }
+
         if(getData(portNumber).isContinuous()) {
             final ContinuousServoData servo = (ContinuousServoData) getData(portNumber);
             servo.power = Range.clip(2 * pwmPowerFromPosition(servo, position), -1.0, 1.0);
             servo.unaffectedVelocity = servo.power * servo.maxRevsPerSec;
             servo.isTargetSet = true;
-
-            //#region DEV START: Logging the values 
-            
-            // System.out.println("[set servo position] position: " + position);
-            // System.out.println("[set servo position] power: " + servo.power);
-            // System.out.println("[set servo position] velocity:" + servo.unaffectedVelocity);
-            //#endregion DEV END
         } else if(getData(portNumber).isPositional()) {
             final PositionalServoData servo = (PositionalServoData) getData(portNumber);
             servo.targetPosition = 
@@ -242,20 +247,35 @@ public class ServoControllerExFake implements ServoControllerEx {
 
     @Override
     public double getServoPosition(int portNumber) {
+        final double last = lastKnown[portNumber];
         if(getData(portNumber).isContinuous()) {
-            final ContinuousServoData servo = (ContinuousServoData) getData(portNumber);
-            return positionFromPwmPower(servo, 0.5 * servo.power);
-        } else if(getData(portNumber).isPositional()) {
-            final PositionalServoData servo = (PositionalServoData) getData(portNumber);
-            return positionFromPwmPower(servo, servo.targetPosition / servo.maxPosition - 0.5);
-        } else {
-            throw new ClassCastException("servoData.actuator must be instance of CRServoImplEx or ServoImplEx");
+            return Double.isNaN(last) ? 0.5 : last;
         }
+
+        return Double.isNaN(last) ? 0.0 : last;
+    }
+
+    @Override
+    public void forgetLastKnownPosition(int portNumber) {
+        lastKnown[portNumber] = Double.NaN;
+    }
+    
+    public double lastKnownPosition(int portNumber) {
+        return lastKnown[portNumber];
+    }
+
+    public double lastKnownPower(int portNumber) {
+        return Range.scale(lastKnown[portNumber], 0, 1, -1, 1);
+    } 
+
+    public void enableDry(boolean doEnable) {
+        this.enableDry = doEnable;
     }
 
     @Override
     public void setServoPwmRange(int portNumber, @NonNull PwmRange range) {
         getData(portNumber).range = range;
+        forgetLastKnownPosition(portNumber);
     }
 
     @Override
@@ -281,6 +301,37 @@ public class ServoControllerExFake implements ServoControllerEx {
     @Override
     public boolean isServoPwmEnabled(int portNumber) {
         return getData(portNumber).isEnabled;
+    }
+
+    @Override
+    public double getPulseWidth(int portNumber) {
+        if(getData(portNumber).isContinuous()) {
+            final ContinuousServoData servo = (ContinuousServoData) getData(portNumber);
+            return pwmWidthFromPower(servo, servo.power);
+        } else if(getData(portNumber).isPositional()) {
+            final PositionalServoData servo = (PositionalServoData) getData(portNumber);
+            return pwmWidthFromPosition(servo, servo.targetPosition);
+        } else {
+            throw new ClassCastException("servoData.actuator must be instance of CRServoImplEx or ServoImplEx");
+        }
+    }
+    
+    @Override
+    public void setPulseWidth(int portNumber, double micros) {
+        if(getData(portNumber).isContinuous()) {
+            final ContinuousServoData servo = (ContinuousServoData) getData(portNumber);
+            forgetLastKnownPosition(portNumber);
+            servo.power = powerFromPwmWidth(servo, micros);
+            servo.unaffectedVelocity = servo.power * servo.maxRevsPerSec;
+            servo.isTargetSet = true;
+        } else if(getData(portNumber).isPositional()) {
+            final PositionalServoData servo = (PositionalServoData) getData(portNumber);
+            forgetLastKnownPosition(portNumber);
+            servo.targetPosition = servo.maxPosition * positionFromPwmWidth(servo, micros);
+            servo.isTargetSet = true;
+        } else {
+            throw new ClassCastException("servoData.actuator must be instance of CRServoImplEx or ServoImplEx");
+        }
     }
 
     @Override
@@ -320,12 +371,12 @@ public class ServoControllerExFake implements ServoControllerEx {
             "\n    [3]: %s" +  
             "\n    [4]: %s" +  
             "\n    [5]: %s",
-            safeGetDeviceName(servos.get(0).actuator),
-            safeGetDeviceName(servos.get(1).actuator),
-            safeGetDeviceName(servos.get(2).actuator),
-            safeGetDeviceName(servos.get(3).actuator),
-            safeGetDeviceName(servos.get(4).actuator),
-            safeGetDeviceName(servos.get(5).actuator)
+            safeGetDeviceName(servos[0].actuator),
+            safeGetDeviceName(servos[1].actuator),
+            safeGetDeviceName(servos[2].actuator),
+            safeGetDeviceName(servos[3].actuator),
+            safeGetDeviceName(servos[4].actuator),
+            safeGetDeviceName(servos[5].actuator)
         );
     }
 
@@ -336,13 +387,85 @@ public class ServoControllerExFake implements ServoControllerEx {
 
     @Override
     public void resetDeviceConfigurationForOpMode() {
-        this.servos = new HashMap<>();
+        this.servos = new ServoData[6];
+        this.lastKnown = clearedLastKnowns();
     }
 
     @Override
     public void close() {
         this.servos = null; // Allow the connections ot be garbage collected
     }
+
+    /**
+     * Gets the number of pulse-width-modulated microseconds used to generate the 
+     * given position.
+     * 
+     * @param data Source of the current and max PWM ranges
+     * @param position The position of the servo, in range [0, 1]
+     * @return The width of PWM require to generate the given position
+     */
+    private double pwmWidthFromPosition(ServoData data, double position) {
+        return Range.scale(
+            position,
+            0.0,
+            1.0,
+            data.maxPwm.usPulseLower,
+            data.maxPwm.usPulseUpper
+        );
+    }
+    
+    /**
+     * Gets the position which generates the given pulse-width-modulated width.
+     * 
+     * @param data Source of the current and max PWM ranges
+     * @param micros Width of the PWM wave
+     * @return The position that would be held, in range [-, 1]
+     */
+    private double positionFromPwmWidth(ServoData data, double position) {
+        return Range.scale(
+            position,
+            data.maxPwm.usPulseLower,
+            data.maxPwm.usPulseUpper,
+            0.0,
+            1.0
+        );
+    }
+
+    /**
+     * Gets the number of pulse-width-modulated microseconds used to generate the 
+     * given power.
+     * 
+     * @param data Source of the current and max PWM ranges
+     * @param power The power of the servo, in range [-1, 1]
+     * @return The width of PWM require to generate the given power
+     */
+    private double pwmWidthFromPower(ServoData data, double power) {
+        return Range.scale(
+            power,
+            -1.0,
+            1.0,
+            data.maxPwm.usPulseLower,
+            data.maxPwm.usPulseUpper
+        );
+    }
+    
+    /**
+     * Gets the power which generates the given pulse-width-modulated width.
+     * 
+     * @param data Source of the current and max PWM ranges
+     * @param micros Width of the PWM wave
+     * @return The power that would be held, in range [-1, 1]
+     */
+    private double powerFromPwmWidth(ServoData data, double power) {
+        return Range.scale(
+            power,
+            data.maxPwm.usPulseLower,
+            data.maxPwm.usPulseUpper,
+            0.0,
+            1.0
+        );
+    }
+
 
     /**
      * Converts an abstract position value into a normalized fraction of the max

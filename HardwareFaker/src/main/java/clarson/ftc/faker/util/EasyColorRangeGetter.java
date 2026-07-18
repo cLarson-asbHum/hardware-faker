@@ -37,9 +37,22 @@ public final class EasyColorRangeGetter extends UpdateableSupplier<EasyColorRang
     /**
      * Stores both a distance and a color reading.
      */
-    static final record ColorRange(double distance, @ColorInt int color) {
-        public ColorRange copyWithColor(@ColorInt int newColor) {
-            return new ColorRange(this.distance, newColor);
+    static final record ColorRange(double distance, int red, int green, int blue) {
+        static ColorRange fromColorInt(double distance, @ColorInt int color) {
+            return new ColorRange(
+                distance,
+                ColorGetter.uByteToUShort(ColorGetter.parseRed(color)), 
+                ColorGetter.uByteToUShort(ColorGetter.parseGreen(color)), 
+                ColorGetter.uByteToUShort(ColorGetter.parseBlue(color)) 
+            );
+        }
+
+        /** 
+         * Red, green, and blue should be in the range of [0, 65535], although they will
+         * be clamped.
+         */
+        ColorRange copyWithComponents(int red, int green, int blue) {
+            return new ColorRange(this.distance, red & 65535, green & 65535, blue & 65535);
         }
     }
 
@@ -63,9 +76,33 @@ public final class EasyColorRangeGetter extends UpdateableSupplier<EasyColorRang
      * @param argb What determines the return value of getColor().
      */
     public EasyColorRangeGetter(DistanceGetter distance, @ColorInt IntSupplier argb) {
-        this((unit, deltaSec) -> new ColorRange(distance.getDistance(unit), argb.getAsInt()));
+        this((unit, deltaSec) -> 
+            ColorRange.fromColorInt(distance.getDistance(unit), argb.getAsInt()));
     }
     
+    /**
+     * Constructs a ColorRangeGetter whose getDistance() and getColor() methods return
+     * values obtained from invoking the provided getters. Construction invokes both 
+     * getters, and the first return value from each will be used as the return of 
+     * the new ColorRangeGetters's getDistance() and getColor() methods until update() is 
+     * called succesfully (i.e. updating is enabled and the provided deltaSec argument was 
+     * not 0).
+     * 
+     * The provided getters are independent of time because they do not have a double 
+     * parameter. 
+     * 
+     * The default distance units of the `get()` method are given by the static 
+     * `DEFAULT_UNIT` field. The format of the argb value is `0xAARRGGBB`
+     * 
+     * @param distance What determines the return value of getDistance(). 
+     * @param argb What determines the return value of getColor().
+     */
+    public EasyColorRangeGetter(DistanceGetter distance, ColorGetter argb) {
+        this((unit, deltaSec) -> new ColorRange(distance.getDistance(unit), 
+                argb.redShort(), argb.greenShort(), argb.blueShort()));
+    }
+    
+
     /**
      * Constructs a ColorRangeGetter whose getDistance() and getColor() methods return
      * values obtained from invoking the provided getters. Construction invokes both 
@@ -84,9 +121,10 @@ public final class EasyColorRangeGetter extends UpdateableSupplier<EasyColorRang
      */
     public EasyColorRangeGetter(
         BiFunction<DistanceUnit, Double, Double> distance, 
-        Function<Double, Integer> color
+        Function<Double, Integer> argb
     ) {
-        this((unit, deltaSec) -> new ColorRange(distance.apply(unit, deltaSec), color.apply(deltaSec)));
+        this((unit, deltaSec) -> 
+            ColorRange.fromColorInt(distance.apply(unit, deltaSec), argb.apply(deltaSec)));
     }
     
     /**
@@ -120,6 +158,25 @@ public final class EasyColorRangeGetter extends UpdateableSupplier<EasyColorRang
     @Override
     @ColorInt
     public int getColor() {
-        return this.get().color();
+        final ColorRange cr = this.get();
+        return ColorGetter.colorIntFromShorts(cr.red(), cr.green(), cr.blue());
+    }
+
+    @Override
+    @ColorInt
+    public int redShort() {
+        return this.get().red();
+    }
+    
+    @Override
+    @ColorInt
+    public int greenShort() {
+        return this.get().green();
+    }
+    
+    @Override
+    @ColorInt
+    public int blueShort() {
+        return this.get().blue();
     }
 }

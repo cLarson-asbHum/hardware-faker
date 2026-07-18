@@ -37,6 +37,7 @@ import clarson.ftc.faker.wrapper.SensorFakeBase;
 
 import static clarson.ftc.faker.updater.UpdatesWhen.ALWAYS;
 import static clarson.ftc.faker.updater.UpdatesWhen.CONDITIONAL;
+import static clarson.ftc.faker.updater.UpdatesWhen.NEVER;
 
 import com.qualcomm.robotcore.hardware.ColorRangeSensor;
 import com.qualcomm.robotcore.hardware.I2cAddr;
@@ -110,56 +111,54 @@ public class ColorRangeSensorFake extends SensorFakeBase<ColorRangeGetter> imple
         return super.underlyingGetter.getColor();
     }
 
-    protected enum ColorByte {
-        ALPHA(3),
-        RED(2),
-        GREEN(1),
-        BLUE(0);
-
-        public final int bitIndex;
-
-        private ColorByte(int byteIndex) {
-            this.bitIndex = (8 * byteIndex);
-        }
-    }
-
     /**
-     * Gets the given component of the given ARGB color specified by a byte index.
-     * The byteIndex is treated little-endian, so byteIndex 0 gets blue, 1 gets 
-     * green, 2 red, and 3 alpha. Byte indices outside the range [0, 3] will throw 
-     * an exception 
+     * Returns the brightness of the current color.
      * 
-     * @param argb The Android color int to parse the component from
-     * @param byteIndex What component to get. See above for detail.
-     * @return The componet of the given color. Guaranteed to be in range [0, 255].
+     * @return The average of the 3 color components. In range [0, 65535]
      */
-    protected int parseColorComponent(@ColorInt int argb, ColorByte colorByte) {
-        final int mask = 0xff << colorByte.bitIndex;
-        return (argb & mask) >> colorByte.bitIndex;
-    }
-
     @SimulateDelay(ALWAYS)
     @Override
     public int alpha() {
-        return parseColorComponent(argb(), ColorByte.ALPHA);
+        Updater.updateAllOnce(rememberedUpdaters, Updater.UpdateDelaySource.I2C);
+        return (underlyingGetter.redShort() 
+            + underlyingGetter.greenShort() 
+            + underlyingGetter.blueShort());
     }
 
+    /**
+     * The red component of the color
+     * 
+     * @return Red in range [0, 65535]
+     */
     @SimulateDelay(ALWAYS)
     @Override
     public int red() {
-        return parseColorComponent(argb(), ColorByte.RED);
+        Updater.updateAllOnce(rememberedUpdaters, Updater.UpdateDelaySource.I2C);
+        return super.underlyingGetter.redShort() & 65535;
     }
 
+    /**
+     * The green component of the color
+     * 
+     * @return Green in range [0, 65535]
+     */
     @SimulateDelay(ALWAYS)
     @Override
     public int green() {
-        return parseColorComponent(argb(), ColorByte.GREEN);
+        Updater.updateAllOnce(rememberedUpdaters, Updater.UpdateDelaySource.I2C);
+        return super.underlyingGetter.greenShort() & 65535;
     }
 
+    /**
+     * The blue component of the color
+     * 
+     * @return Blue in range [0, 65535]
+     */
     @SimulateDelay(ALWAYS)
     @Override
     public int blue() {
-        return parseColorComponent(argb(), ColorByte.BLUE);
+        Updater.updateAllOnce(rememberedUpdaters, Updater.UpdateDelaySource.I2C);
+        return super.underlyingGetter.blueShort() & 65535;
     }
 
     @Override
@@ -205,17 +204,24 @@ public class ColorRangeSensorFake extends SensorFakeBase<ColorRangeGetter> imple
     @SimulateDelay(ALWAYS)
     @Override
     public NormalizedRGBA getNormalizedColors() {
-        final int argb = argb(); // Simulates delay
-        final int red = parseColorComponent(argb, ColorByte.RED);
-        final int green = parseColorComponent(argb, ColorByte.GREEN);
-        final int blue = parseColorComponent(argb, ColorByte.BLUE);
+        Updater.updateAllOnce(rememberedUpdaters, Updater.UpdateDelaySource.I2C);
+        final int red   = super.underlyingGetter.redShort()   & 65535;
+        final int green = super.underlyingGetter.greenShort() & 65535;
+        final int blue  = super.underlyingGetter.blueShort()  & 65535;
 
-        this.colors.red   = Range.clip((float) (red   * this.softwareGain), 0f, 1f);
-        this.colors.green = Range.clip((float) (green * this.softwareGain), 0f, 1f);
-        this.colors.blue  = Range.clip((float) (blue  * this.softwareGain), 0f, 1f);      
+        // this.colors.alpha = Range.clip((float) (alpha * this.softwareGain / 255.0), 0f, 1f);
+        this.colors.red   = Range.clip((float) (red   * this.softwareGain / 65535.0), 0f, 1f);
+        this.colors.green = Range.clip((float) (green * this.softwareGain / 65535.0), 0f, 1f);
+        this.colors.blue  = Range.clip((float) (blue  * this.softwareGain / 65535.0), 0f, 1f);      
+
+        // apply inverse squared law of light to get readable brightness value, stored in alpha channel
+        // scale to 65535
+        final float avg = (float)(red + green + blue) / 3;
+        this.colors.alpha = (float) (-(65535f / (Math.pow(avg, 2) + 65535)) + 1);
         return this.colors;
     }
 
+    @SimulateDelay(NEVER)
     @Override
     public void setGain(float newGain) {
         this.softwareGain = newGain;
@@ -233,6 +239,7 @@ public class ColorRangeSensorFake extends SensorFakeBase<ColorRangeGetter> imple
         throw new NoImplementationError("Method ColorRangeSensor.getRawLightDetected() not currently implemented");
     }
 
+    @SimulateDelay(NEVER)
     @Override
     public double getRawLightDetectedMax() {
         throw new NoImplementationError("Method ColorRangeSensor.getRawLightDetectedMax() not currently implemented");

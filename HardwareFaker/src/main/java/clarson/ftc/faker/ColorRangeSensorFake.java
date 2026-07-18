@@ -230,20 +230,20 @@ public class ColorRangeSensorFake extends SensorFakeBase<ColorRangeGetter> imple
     @SimulateDelay(ALWAYS)
     @Override
     public double getLightDetected() {
-        throw new NoImplementationError("Method ColorRangeSensor.getLightDetected() not currently implemented");
+        return Range.scale(getRawLightDetected(), 0, getRawLightDetectedMax(), 0, 1);
     }
 
     @SimulateDelay(ALWAYS)
     @Override
     public double getRawLightDetected() {
-        throw new NoImplementationError("Method ColorRangeSensor.getRawLightDetected() not currently implemented");
+        getNormalizedColors(); // Simulates delay
+        return this.colors.alpha;
     }
 
     @SimulateDelay(NEVER)
     @Override
     public double getRawLightDetectedMax() {
-        throw new NoImplementationError("Method ColorRangeSensor.getRawLightDetectedMax() not currently implemented");
-        // return maxLight;
+        return 65535;
     }
 
     @Override

@@ -54,7 +54,7 @@ public class ColorRangeSensorFake extends SensorFakeBase<ColorRangeGetter> imple
     private final Set<Updater> rememberedUpdaters = new HashSet<>();
     private final NormalizedRGBA colors = new NormalizedRGBA();
     private final SwitchableLight light;
-    private double softwareGain = 1.0;
+    private float softwareGain = 1.0f;
 
     public ColorRangeSensorFake(DistanceGetter distanceGetter, ColorGetter colorGetter) {
         this(new EasyColorRangeGetter(distanceGetter, colorGetter));
@@ -107,8 +107,8 @@ public class ColorRangeSensorFake extends SensorFakeBase<ColorRangeGetter> imple
     @Override
     @ColorInt
     public int argb() {
-        Updater.updateAllOnce(rememberedUpdaters, Updater.UpdateDelaySource.I2C);
-        return super.underlyingGetter.getColor();
+        final int alphaUpper = this.alpha() & 0xff_00; // Simulates Delay always
+        return super.underlyingGetter.getColor() | (alphaUpper << 16);
     }
 
     /**
@@ -122,7 +122,7 @@ public class ColorRangeSensorFake extends SensorFakeBase<ColorRangeGetter> imple
         Updater.updateAllOnce(rememberedUpdaters, Updater.UpdateDelaySource.I2C);
         return (underlyingGetter.redShort() 
             + underlyingGetter.greenShort() 
-            + underlyingGetter.blueShort());
+            + underlyingGetter.blueShort()) / 3;
     }
 
     /**
@@ -205,14 +205,14 @@ public class ColorRangeSensorFake extends SensorFakeBase<ColorRangeGetter> imple
     @Override
     public NormalizedRGBA getNormalizedColors() {
         Updater.updateAllOnce(rememberedUpdaters, Updater.UpdateDelaySource.I2C);
-        final int red   = super.underlyingGetter.redShort()   & 65535;
-        final int green = super.underlyingGetter.greenShort() & 65535;
-        final int blue  = super.underlyingGetter.blueShort()  & 65535;
+        final double red   = super.underlyingGetter.redShort()   & 65535;
+        final double green = super.underlyingGetter.greenShort() & 65535;
+        final double blue  = super.underlyingGetter.blueShort()  & 65535;
 
         // this.colors.alpha = Range.clip((float) (alpha * this.softwareGain / 255.0), 0f, 1f);
-        this.colors.red   = Range.clip((float) (red   * this.softwareGain / 65535.0), 0f, 1f);
-        this.colors.green = Range.clip((float) (green * this.softwareGain / 65535.0), 0f, 1f);
-        this.colors.blue  = Range.clip((float) (blue  * this.softwareGain / 65535.0), 0f, 1f);      
+        this.colors.red   = Range.clip(this.softwareGain * (float) (red   / 65535.0), 0f, 1f);
+        this.colors.green = Range.clip(this.softwareGain * (float) (green / 65535.0), 0f, 1f);
+        this.colors.blue  = Range.clip(this.softwareGain * (float) (blue  / 65535.0), 0f, 1f);      
 
         // apply inverse squared law of light to get readable brightness value, stored in alpha channel
         // scale to 65535

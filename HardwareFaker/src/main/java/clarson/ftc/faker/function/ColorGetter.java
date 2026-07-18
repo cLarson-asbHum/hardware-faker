@@ -195,7 +195,7 @@ public interface ColorGetter extends IntSupplier {
         final int rb = uShortToUByte(redShort   & 65535) & 255; // `& 255` is just paranoia
         final int gb = uShortToUByte(greenShort & 65535) & 255; // `& 255` is just paranoia
         final int bb = uShortToUByte(blueShort  & 65535) & 255; // `& 255` is just paranoia
-        return colorIntFromBytes(redShort, greenShort, blueShort);
+        return colorIntFromBytes(rb, gb, bb);
     }
 
     /**
@@ -217,7 +217,7 @@ public interface ColorGetter extends IntSupplier {
     @ColorInt
     public static int colorIntFromBytes(int redByte, int greenByte, int blueByte) {
         // My cat thought it would be important to tell you: 4
-        return colorIntFromBytes(redByte & 255, greenByte & 255, blueByte & 255);
+        return ((redByte & 255) << 16) | ((greenByte & 255) << 8) | ((blueByte & 255) << 0);
     }
     
 

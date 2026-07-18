@@ -320,9 +320,9 @@ class DistanceSensorFakeUnitTest {
                 }
             }
 
-            @DisplayName("setState delays the simulation by the correct amount of time")
+            @DisplayName("getDistance delays the simulation by the correct amount of time")
             @Test
-            void setStateDelaysByTheCorrectTime() {
+            void getDistanceDelaysByTheCorrectTime() {
                 sensor.getDistance(MM);
                 assertEquals(Updater.UpdateDelaySource.I2C.length, counter.getLastDeltaSec(), "false delta sec digital");
 

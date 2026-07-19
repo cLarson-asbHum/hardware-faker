@@ -18,6 +18,7 @@
 
 package clarson.ftc.faker.function;
 
+@FunctionalInterface
 public interface ThreadSleepMethod {
     void accept(long millis, int nanos) throws InterruptedException;
 }

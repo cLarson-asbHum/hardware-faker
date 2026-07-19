@@ -40,7 +40,7 @@ import java.util.Map;
 import static com.qualcomm.robotcore.hardware.PwmControl.PwmRange;
 
 public class ServoControllerExFake implements ServoControllerEx {
-    protected ServoData[] servos = new ServoData[6];
+    protected ServoData[] servos = new ServoData[this.totalPorts()];
     protected double[] lastKnown = clearedLastKnowns();
     private boolean enableDry = false;
 
@@ -64,6 +64,10 @@ public class ServoControllerExFake implements ServoControllerEx {
         }
     }
 
+    public int totalPorts() {
+        return 6;
+    }
+
     /**
      * Determines whether a servo can be connected to the given port. A port can
      * be connected to if it is between 0-5 (inclusive) and the port is not 
@@ -73,7 +77,7 @@ public class ServoControllerExFake implements ServoControllerEx {
      * @return Whether the port exists and is unnoccupied.
      */
     public boolean isPortAvailable(int portNumber) {
-        return servos[portNumber] == null && portNumber >= 0 && portNumber <= 5;
+        return  servos[portNumber] == null && portNumber >= 0 && portNumber <= this.totalPorts();
     }
 
     /**
@@ -362,7 +366,7 @@ public class ServoControllerExFake implements ServoControllerEx {
 
     @Override
     public String getConnectionInfo() {
-        
+        // TODO: Make this genralizable for any number of ports varyng with 
         return String.format(
               "ServoControllerExFake Connections:" +
             "\n    [0]: %s" +  

@@ -18,8 +18,6 @@
 
 package clarson.ftc.faker;
 
-import java.util.HashSet;
-
 import com.qualcomm.robotcore.hardware.LED;
 
 import clarson.ftc.faker.updater.TwoWayUpdateable;
@@ -33,6 +31,9 @@ import java.util.Set;
 public class LEDFake extends LED implements TwoWayUpdateable {
     public static final boolean DEFAULT_INITIALLY_ON = false;
 
+    /**
+     * Used only for avoiding a compilation error about flexible constructor bodies.
+     */
     private static DigitalChannelImplFake lastChannel = null;
     private final DigitalChannelImplFake channel;
     

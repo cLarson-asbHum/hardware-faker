@@ -57,7 +57,7 @@ public class DcMotorControllerExFake implements DcMotorControllerEx {
 
     private boolean shouldReread = false;
     protected LynxModuleHardwareFake module;
-    protected Map<Integer, MotorData> motors = new HashMap<>(4, 1.0f);
+    protected MotorData[] motors = new MotorData[this.totalPorts()];
 
     public DcMotorControllerExFake() throws RobotCoreException, InterruptedException {
         this(LynxModuleHardwareFake.createUniqueModule());
@@ -65,6 +65,10 @@ public class DcMotorControllerExFake implements DcMotorControllerEx {
 
     public DcMotorControllerExFake(LynxModuleHardwareFake module) {
         this.module = module;
+    }
+
+    public int totalPorts() {
+        return 4;
     }
 
     public void setLynxModule(LynxModuleHardwareFake newModule) {
@@ -84,7 +88,7 @@ public class DcMotorControllerExFake implements DcMotorControllerEx {
      * @return Whether the port exists and is unnoccupied.
      */
     public boolean isPortAvailable(int portNumber) {
-        return !motors.containsKey(portNumber) && portNumber >= 0 && portNumber <= 3;
+        return motors[portNumber] == null && portNumber >= 0 && portNumber <= this.totalPorts();
     }
 
     /**
@@ -101,7 +105,7 @@ public class DcMotorControllerExFake implements DcMotorControllerEx {
             return false;
         }
 
-        motors.put(motorData.actuator.getPortNumber(), motorData);
+        motors[motorData.actuator.getPortNumber()] = motorData;
         return true;
     }
     /**
@@ -118,7 +122,7 @@ public class DcMotorControllerExFake implements DcMotorControllerEx {
             return false;
         }
 
-        motors.put(portNumber, motorData);
+        motors[portNumber] = motorData;
         return true;
     }
 
@@ -130,11 +134,11 @@ public class DcMotorControllerExFake implements DcMotorControllerEx {
      * @return The motor data at the given port.
      */
     public MotorData getData(int port) {
-        if(!motors.containsKey(port)) {
+        if(motors[port] == null) {
             throw new IllegalArgumentException("Attempted to access unconnected port <" + port + ">.");
         }
 
-        return motors.get(port);
+        return motors[port];
     }
 
     /**
@@ -145,11 +149,11 @@ public class DcMotorControllerExFake implements DcMotorControllerEx {
      * @return The motor at the given port
      */
     public DcMotorImplEx getMotor(int port) {
-        if(!motors.containsKey(port)) {
+        if(motors[port] == null) {
             throw new IllegalArgumentException("Attempted to access unconnected port <" + port + ">.");
         }
 
-        return motors.get(port).actuator;
+        return motors[port].actuator;
     }
 
     /**
@@ -490,6 +494,6 @@ public class DcMotorControllerExFake implements DcMotorControllerEx {
 
     @Override
     public void resetDeviceConfigurationForOpMode() {
-        this.motors = new HashMap<>();
+        this.motors = new MotorData[this.totalPorts()];
     }
 }

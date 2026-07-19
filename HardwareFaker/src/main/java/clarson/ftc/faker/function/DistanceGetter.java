@@ -20,6 +20,7 @@ package clarson.ftc.faker.function;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
+@FunctionalInterface
 public interface DistanceGetter {
     double getDistance(DistanceUnit units);
 }

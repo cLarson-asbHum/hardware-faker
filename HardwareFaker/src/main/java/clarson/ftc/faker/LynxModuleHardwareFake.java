@@ -32,7 +32,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-// Unfortunately, we cannot call this this "LynxModuleHardwareFake" because either Gradle 
+// Unfortunately, we cannot call this this "LynxModuleFake" because either Gradle 
 // or Java ignores that the file exists when it has the name. We instead opt with the
 // next best option, "LynxModuleHardwareFake". This is horribly inconsisten with other 
 // fakes, and pains me to write.

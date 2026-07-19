@@ -22,6 +22,8 @@ import java.util.function.IntSupplier;
 
 import androidx.annotation.ColorInt;
 
+
+@FunctionalInterface
 public interface ColorGetter extends IntSupplier {
     /**
      * Gets an RGBA color whose hex matches the form `0x00RRGGBB` (written here 

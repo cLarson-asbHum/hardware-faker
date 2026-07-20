@@ -19,11 +19,7 @@
 package clarson.ftc.faker.wrapper;
 
 import clarson.ftc.faker.updater.Updateable;
-
 import com.qualcomm.robotcore.hardware.HardwareDevice;
-
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * Wraps a given getter implementing `Updateable` in such a way that allows

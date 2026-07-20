@@ -1,7 +1,7 @@
 /**
  * LynxModuleHardwareFake.java
  * 
- * This source class contains methods which are under the copyright ownership of 
+ * This source file contains methods which are under the copyright ownership of 
  * Robert Atkinson. Such methods are subject to the BSD 3-clause license. 
  * 
  * Except where noted, this file is subject to the following license: 
@@ -23,16 +23,14 @@
 package clarson.ftc.faker;
 
 import com.qualcomm.hardware.lynx.commands.core.LynxDekaInterfaceCommand;
-import com.qualcomm.hardware.lynx.commands.LynxCommand;
 import com.qualcomm.hardware.lynx.LynxModule;
-import com.qualcomm.robotcore.hardware.LynxModuleDescription;
 import com.qualcomm.robotcore.exception.RobotCoreException;
-
+import com.qualcomm.robotcore.hardware.LynxModuleDescription;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-// Unfortunately, we cannot call this this "LynxModuleHardwareFake" because either Gradle 
+// Unfortunately, we cannot call this this "LynxModuleFake" because either Gradle 
 // or Java ignores that the file exists when it has the name. We instead opt with the
 // next best option, "LynxModuleHardwareFake". This is horribly inconsisten with other 
 // fakes, and pains me to write.

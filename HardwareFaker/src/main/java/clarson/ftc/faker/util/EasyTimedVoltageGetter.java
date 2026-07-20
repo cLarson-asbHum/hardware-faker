@@ -1,5 +1,5 @@
 /*
- * EasyTimedDistanceGetter.java
+ * EasyTimedVoltageGetter.java
  * 
  * Copyright 2026 Connor Larson
  * 
@@ -18,64 +18,64 @@
 
 package clarson.ftc.faker.util;
 
-import clarson.ftc.faker.function.DistanceGetter;
-import clarson.ftc.faker.function.TimedDistanceGetter;
+import clarson.ftc.faker.function.TimedVoltageGetter;
+import clarson.ftc.faker.function.VoltageGetter;
 import java.util.function.BiFunction;
 import java.util.function.DoubleSupplier;
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.VoltageUnit;
 
 /**
- * Creates a TimedDistanceGetter with a double generator.  
+ * Creates a TimedVoltageGetter with a double generator.  
  */
-public final class EasyTimedDistanceGetter extends UpdateableSupplier<Double> implements TimedDistanceGetter {
-    public static final DistanceUnit DEFAULT_UNIT = DistanceUnit.INCH;
+public final class EasyTimedVoltageGetter extends UpdateableSupplier<Double> implements TimedVoltageGetter {
+    public static final VoltageUnit DEFAULT_UNIT = VoltageUnit.VOLTS;
 
     /**
-     * Constructs a TimedDistanceGetter whose getDistance() method return
+     * Constructs a TimedVoltageGetter whose getVoltage() method return
      * values obtained from invoking the provided supplier. Construction invokes the 
      * Double generator, and the first return value from it will be used as the return of 
-     * the new TimedDistanceGetter's getDistance() method until update() is 
+     * the new TimedVoltageGetter's getVoltage() method until update() is 
      * called succesfully (i.e. updating is enabled and the provided deltaSec argument was 
      * not 0).
      * 
-     * Becuase the provided DistanceGetter takes no Double parameters, the generation of 
-     * the distances is independent of the time.
+     * Becuase the provided VoltageGetter takes no Double parameters, the generation of 
+     * the voltages is independent of the time.
      * 
      * The default units of the `get()` method are given by the static `DEFAULT_UNIT` 
      * field. 
      * 
-     * @param supplier What determines the return value of getDistance(). 
+     * @param supplier What determines the return value of getVoltage(). 
      */
-    public EasyTimedDistanceGetter(DistanceGetter supplier) {
-        this((DistanceUnit unit, Double unused) -> supplier.getDistance(unit));
+    public EasyTimedVoltageGetter(VoltageGetter supplier) {
+        this((VoltageUnit unit, Double unused) -> supplier.getVoltage(unit));
     }
     
     /**
-     * Constructs a TimedDistanceGetter whose getDistance() method return
+     * Constructs a TimedVoltageGetter whose getVoltage() method return
      * values obtained from invoking the provided supplier. Construction invokes the 
      * Double generator, and the first return value from it will be used as the return of 
-     * the new TimedDistanceGetter's getDistance() method until update() is 
+     * the new TimedVoltageGetter's getVoltage() method until update() is 
      * called succesfully (i.e. updating is enabled and the provided deltaSec argument was 
      * not 0).
      * 
-     * Becuase the provided DistanceGetter takes no Double parameters, the generation of 
-     * the distances is independent of the time.
+     * Becuase the provided VoltageGetter takes no Double parameters, the generation of 
+     * the voltages is independent of the time.
      * 
      * The default units of the `get()` method are given by the static `DEFAULT_UNIT` 
      * field. 
      * 
-     * @param supplier What determines the return value of getDistance(). The supplier's
+     * @param supplier What determines the return value of getVoltage(). The supplier's
      * units are assumed to be DEFAULT_UNIT.
      */
-    public EasyTimedDistanceGetter(DoubleSupplier supplier) {
-        this((DistanceUnit unit, Double unused) -> unit.fromUnit(DEFAULT_UNIT, supplier.getAsDouble()));
+    public EasyTimedVoltageGetter(DoubleSupplier supplier) {
+        this((VoltageUnit unit, Double unused) -> unit.convert(supplier.getAsDouble(), DEFAULT_UNIT));
     }
 
     /**
-     * Constructs a TimedDistanceGetter whose getDistance() method return
+     * Constructs a TimedVoltageGetter whose getVoltage() method return
      * values obtained from invoking the provided supplier. Construction invokes the 
      * Double generator, and the first return value from it will be used as the return of 
-     * the new TimedDistanceGetter's getDistance() method until update() is 
+     * the new TimedVoltageGetter's getVoltage() method until update() is 
      * called succesfully (i.e. updating is enabled and the provided deltaSec argument was 
      * not 0).
      * 
@@ -85,10 +85,10 @@ public final class EasyTimedDistanceGetter extends UpdateableSupplier<Double> im
      * The default units of the `get()` method are given by the static `DEFAULT_UNIT` 
      * field. 
      * 
-     * @param supplier What determines the return value of getDistance(). 
+     * @param supplier What determines the return value of getVoltage(). 
      */
-    public EasyTimedDistanceGetter(BiFunction<DistanceUnit, Double, Double> distanceGenerator) {
-        super((deltaSec) -> distanceGenerator.apply(DEFAULT_UNIT, deltaSec));
+    public EasyTimedVoltageGetter(BiFunction<VoltageUnit, Double, Double> voltageGenerator) {
+        super((deltaSec) -> voltageGenerator.apply(DEFAULT_UNIT, deltaSec));
     }
 
     /**
@@ -98,7 +98,7 @@ public final class EasyTimedDistanceGetter extends UpdateableSupplier<Double> im
      * @return The last value obtained from the supplier provided at construction. 
      */
     @Override
-    public double getDistance(DistanceUnit units) {
-        return units.fromUnit(DEFAULT_UNIT, this.get() /* <-- Already in the default unit */);
+    public double getVoltage(VoltageUnit units) {
+        return units.convert(this.get() /* <-- Already in the default unit */, DEFAULT_UNIT);
     }
 }

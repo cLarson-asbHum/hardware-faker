@@ -19,9 +19,8 @@
 package clarson.ftc.faker.util;
 
 import clarson.ftc.faker.updater.Updateable;
-
-import java.util.function.Supplier;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 /**
  * A Supplier which only returns a new value upon an invocation of the update() 

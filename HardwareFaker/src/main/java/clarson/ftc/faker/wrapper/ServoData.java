@@ -18,16 +18,13 @@
 
 package clarson.ftc.faker.wrapper;
 
-import com.qualcomm.robotcore.hardware.HardwareDevice;
-import com.qualcomm.robotcore.hardware.CRServoImpl;
-import com.qualcomm.robotcore.hardware.ServoImpl;
-import com.qualcomm.robotcore.hardware.configuration.typecontainers.ServoConfigurationType;
-import com.qualcomm.robotcore.util.Range;
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-
 import clarson.ftc.faker.updater.Rotateable;
 import clarson.ftc.faker.updater.Updateable;
-
+import com.qualcomm.robotcore.hardware.configuration.typecontainers.ServoConfigurationType;
+import com.qualcomm.robotcore.hardware.CRServoImpl;
+import com.qualcomm.robotcore.hardware.HardwareDevice;
+import com.qualcomm.robotcore.hardware.ServoImpl;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import static com.qualcomm.robotcore.hardware.PwmControl.PwmRange;
 
 abstract public class ServoData<T extends HardwareDevice> implements Rotateable, Updateable {

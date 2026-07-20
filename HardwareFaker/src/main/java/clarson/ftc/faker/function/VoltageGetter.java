@@ -1,5 +1,5 @@
 /*
- * DistanceGetter.java
+ * VoltageGetter.java
  * 
  * Copyright 2026 Connor Larson
  * 
@@ -15,12 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package clarson.ftc.faker.function;
 
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import java.util.function.DoubleSupplier;
+import org.firstinspires.ftc.robotcore.external.navigation.VoltageUnit;
 
-@FunctionalInterface
-public interface DistanceGetter {
-    double getDistance(DistanceUnit units);
+@FunctionalInterface 
+public interface VoltageGetter {
+    public double getVoltage(VoltageUnit units);
 }

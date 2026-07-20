@@ -19,26 +19,20 @@
 package clarson.ftc.faker;
 
 import clarson.ftc.faker.wrapper.MotorData;
-
-import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.hardware.lynx.commands.core.LynxGetBulkInputDataCommand;
 import com.qualcomm.hardware.lynx.commands.core.LynxGetMotorEncoderPositionCommand;
 import com.qualcomm.hardware.lynx.commands.core.LynxIsMotorAtTargetCommand;
+import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.exception.RobotCoreException;
+import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorImplEx;
 import com.qualcomm.robotcore.hardware.DcMotorControllerEx;
+import com.qualcomm.robotcore.hardware.DcMotorImplEx;
 import com.qualcomm.robotcore.hardware.PIDCoefficients;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
-import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
-
-import static com.qualcomm.robotcore.hardware.HardwareDevice.Manufacturer;
-
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
-
-import java.util.Map;
-import java.util.HashMap;
+import static com.qualcomm.robotcore.hardware.HardwareDevice.Manufacturer;
 
 public class DcMotorControllerExFake implements DcMotorControllerEx {
     /**
@@ -57,7 +51,7 @@ public class DcMotorControllerExFake implements DcMotorControllerEx {
 
     private boolean shouldReread = false;
     protected LynxModuleHardwareFake module;
-    protected Map<Integer, MotorData> motors = new HashMap<>(4, 1.0f);
+    protected MotorData[] motors = new MotorData[this.totalPorts()];
 
     public DcMotorControllerExFake() throws RobotCoreException, InterruptedException {
         this(LynxModuleHardwareFake.createUniqueModule());
@@ -65,6 +59,10 @@ public class DcMotorControllerExFake implements DcMotorControllerEx {
 
     public DcMotorControllerExFake(LynxModuleHardwareFake module) {
         this.module = module;
+    }
+
+    public int totalPorts() {
+        return 4;
     }
 
     public void setLynxModule(LynxModuleHardwareFake newModule) {
@@ -84,7 +82,7 @@ public class DcMotorControllerExFake implements DcMotorControllerEx {
      * @return Whether the port exists and is unnoccupied.
      */
     public boolean isPortAvailable(int portNumber) {
-        return !motors.containsKey(portNumber) && portNumber >= 0 && portNumber <= 3;
+        return motors[portNumber] == null && portNumber >= 0 && portNumber <= this.totalPorts();
     }
 
     /**
@@ -101,7 +99,7 @@ public class DcMotorControllerExFake implements DcMotorControllerEx {
             return false;
         }
 
-        motors.put(motorData.actuator.getPortNumber(), motorData);
+        motors[motorData.actuator.getPortNumber()] = motorData;
         return true;
     }
     /**
@@ -118,7 +116,7 @@ public class DcMotorControllerExFake implements DcMotorControllerEx {
             return false;
         }
 
-        motors.put(portNumber, motorData);
+        motors[portNumber] = motorData;
         return true;
     }
 
@@ -130,11 +128,11 @@ public class DcMotorControllerExFake implements DcMotorControllerEx {
      * @return The motor data at the given port.
      */
     public MotorData getData(int port) {
-        if(!motors.containsKey(port)) {
+        if(motors[port] == null) {
             throw new IllegalArgumentException("Attempted to access unconnected port <" + port + ">.");
         }
 
-        return motors.get(port);
+        return motors[port];
     }
 
     /**
@@ -145,11 +143,11 @@ public class DcMotorControllerExFake implements DcMotorControllerEx {
      * @return The motor at the given port
      */
     public DcMotorImplEx getMotor(int port) {
-        if(!motors.containsKey(port)) {
+        if(motors[port] == null) {
             throw new IllegalArgumentException("Attempted to access unconnected port <" + port + ">.");
         }
 
-        return motors.get(port).actuator;
+        return motors[port].actuator;
     }
 
     /**
@@ -490,6 +488,6 @@ public class DcMotorControllerExFake implements DcMotorControllerEx {
 
     @Override
     public void resetDeviceConfigurationForOpMode() {
-        this.motors = new HashMap<>();
+        this.motors = new MotorData[this.totalPorts()];
     }
 }

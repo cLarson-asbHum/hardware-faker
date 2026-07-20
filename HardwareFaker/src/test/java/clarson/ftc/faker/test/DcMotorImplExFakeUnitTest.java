@@ -18,46 +18,35 @@
 
 package clarson.ftc.faker.test;
 
-// import clarson.ftc.faker.DcMotorImplExFake;
-import clarson.ftc.faker.DcMotorImplExFake;
 import clarson.ftc.faker.DcMotorControllerExFake;
+import clarson.ftc.faker.DcMotorImplExFake;
 import clarson.ftc.faker.LynxModuleHardwareFake;
 import clarson.ftc.faker.LynxUsbDeviceImplFake;
-import clarson.ftc.faker.updater.Updater;
 import clarson.ftc.faker.updater.ModularUpdater;
+import clarson.ftc.faker.updater.Updater;
 import clarson.ftc.faker.util.AbstractTwoWayUpdateable;
 import clarson.ftc.faker.wrapper.MotorData;
-
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.exception.RobotCoreException;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.LynxModuleDescription;
-import com.qualcomm.robotcore.util.Range;
-
-import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-
-import org.junit.jupiter.api.AssertionFailureBuilder;
+import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
-import org.junit.jupiter.api.function.Executable;
-import org.junit.jupiter.api.function.Executable;
-
 import org.junit.jupiter.params.Parameter;
 import org.junit.jupiter.params.ParameterizedClass;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-
+import static clarson.ftc.faker.test.TestUtil.*; // Provides assertFloatEquals and doesThrow
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assumptions.*;
-import static clarson.ftc.faker.test.TestUtil.*; // Provides assertFloatEquals and doesThrow
-
-import static java.util.concurrent.TimeUnit.SECONDS;
 
 @DisplayName("DcMotorImplExFake")
 class DcMotorImplExFakeUnitTest {

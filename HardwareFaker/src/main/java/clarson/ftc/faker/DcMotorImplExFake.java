@@ -18,40 +18,27 @@
 
 package clarson.ftc.faker;
 
-import com.qualcomm.hardware.lynx.commands.core.LynxGetMotorEncoderPositionCommand;
-import com.qualcomm.hardware.lynx.commands.core.LynxGetBulkInputDataCommand;
-import com.qualcomm.hardware.lynx.commands.core.LynxIsMotorAtTargetCommand;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorController;
-import com.qualcomm.robotcore.hardware.DcMotorImplEx;
-import com.qualcomm.robotcore.hardware.LynxModuleDescription;
-import com.qualcomm.robotcore.hardware.PIDCoefficients;
-import com.qualcomm.robotcore.hardware.PIDFCoefficients;
-import com.qualcomm.robotcore.exception.RobotCoreException;
-import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
-
-import static com.qualcomm.robotcore.hardware.HardwareDevice.Manufacturer;
-
 import clarson.ftc.faker.updater.ModularUpdater;
 import clarson.ftc.faker.updater.Rotateable;
 import clarson.ftc.faker.updater.SimulateDelay;
 import clarson.ftc.faker.updater.TwoWayUpdateable;
-import clarson.ftc.faker.updater.Updateable;
 import clarson.ftc.faker.updater.Updater;
 import clarson.ftc.faker.wrapper.MotorData;
-
-import static clarson.ftc.faker.updater.UpdatesWhen.ALWAYS;
-import static clarson.ftc.faker.updater.UpdatesWhen.ON_BULK_READS;
-import static clarson.ftc.faker.updater.Updater.UpdateDelaySource.MOTOR;
-
-import java.util.Collection;
+import com.qualcomm.hardware.lynx.commands.core.LynxGetBulkInputDataCommand;
+import com.qualcomm.hardware.lynx.commands.core.LynxGetMotorEncoderPositionCommand;
+import com.qualcomm.hardware.lynx.commands.core.LynxIsMotorAtTargetCommand;
+import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
+import com.qualcomm.robotcore.hardware.DcMotorImplEx;
+import com.qualcomm.robotcore.hardware.PIDCoefficients;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
-
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Rotation;
+import static clarson.ftc.faker.updater.Updater.UpdateDelaySource.MOTOR;
+import static clarson.ftc.faker.updater.UpdatesWhen.ALWAYS;
+import static clarson.ftc.faker.updater.UpdatesWhen.ON_BULK_READS;
 
 public class DcMotorImplExFake extends DcMotorImplEx implements Rotateable, TwoWayUpdateable {
     public final static MotorConfigurationType getFakeConfiguration(MotorData data) {

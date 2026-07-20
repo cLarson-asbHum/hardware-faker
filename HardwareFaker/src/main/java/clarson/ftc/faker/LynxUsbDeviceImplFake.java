@@ -1,7 +1,7 @@
 /**
  * LynxUsbDeviceImplFake.java
  * 
- * This source class contains methods which are under the copyright ownership of 
+ * This source file contains methods which are under the copyright ownership of 
  * Robert Atkinson. Such methods are subject to the BSD 3-clause license.
  * 
  * Except where noted, this file is subject to the following license: 
@@ -24,52 +24,39 @@ package clarson.ftc.faker;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-
 import clarson.ftc.faker.util.UnsupportedLynxUsbCommandException;
-
-import com.qualcomm.robotcore.hardware.configuration.LynxConstants;
-import com.qualcomm.hardware.lynx.commands.LynxRespondable;
-import com.qualcomm.hardware.lynx.commands.LynxMessage;
-import com.qualcomm.hardware.lynx.commands.LynxCommand;
 import com.qualcomm.hardware.lynx.commands.core.LynxGetBulkInputDataCommand;
 import com.qualcomm.hardware.lynx.commands.core.LynxGetBulkInputDataResponse;
-import com.qualcomm.hardware.lynx.commands.core.LynxIsMotorAtTargetCommand;
-import com.qualcomm.hardware.lynx.commands.core.LynxIsMotorAtTargetResponse;
 import com.qualcomm.hardware.lynx.commands.core.LynxGetMotorEncoderPositionCommand;
 import com.qualcomm.hardware.lynx.commands.core.LynxGetMotorEncoderPositionResponse;
+import com.qualcomm.hardware.lynx.commands.core.LynxIsMotorAtTargetCommand;
+import com.qualcomm.hardware.lynx.commands.core.LynxIsMotorAtTargetResponse;
+import com.qualcomm.hardware.lynx.commands.LynxMessage;
+import com.qualcomm.hardware.lynx.commands.LynxRespondable;
+import com.qualcomm.hardware.lynx.commands.standard.LynxAck;
 import com.qualcomm.hardware.lynx.commands.standard.LynxKeepAliveCommand;
-import com.qualcomm.hardware.lynx.commands.standard.LynxStandardCommand;
+import com.qualcomm.hardware.lynx.commands.standard.LynxNack;
 import com.qualcomm.hardware.lynx.commands.standard.LynxQueryInterfaceCommand;
 import com.qualcomm.hardware.lynx.commands.standard.LynxQueryInterfaceResponse;
+import com.qualcomm.hardware.lynx.commands.standard.LynxStandardCommand;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.hardware.lynx.LynxModuleIntf;
-import com.qualcomm.hardware.lynx.commands.standard.LynxAck;
-import com.qualcomm.hardware.lynx.commands.standard.LynxNack;
 import com.qualcomm.hardware.lynx.LynxUsbDevice;
 import com.qualcomm.hardware.lynx.LynxUsbDeviceImpl;
 import com.qualcomm.robotcore.exception.RobotCoreException;
-import com.qualcomm.robotcore.hardware.LynxModuleDescription;
-import com.qualcomm.robotcore.hardware.LynxModuleMetaList;
-import com.qualcomm.robotcore.hardware.usb.RobotUsbManager;
-import com.qualcomm.robotcore.hardware.usb.RobotUsbDevice;
-import com.qualcomm.robotcore.hardware.usb.RobotUsbModule;
-import com.qualcomm.robotcore.util.SerialNumber;
+import com.qualcomm.robotcore.hardware.configuration.LynxConstants;
 import com.qualcomm.robotcore.hardware.DeviceManager;
-
-import java.util.concurrent.TimeoutException;
+import com.qualcomm.robotcore.hardware.LynxModuleDescription;
+import com.qualcomm.robotcore.hardware.usb.RobotUsbDevice;
+import com.qualcomm.robotcore.hardware.usb.RobotUsbManager;
+import com.qualcomm.robotcore.util.SerialNumber;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
-import java.util.concurrent.TimeUnit;
-
-import org.firstinspires.ftc.robotcore.external.Consumer;
-import org.firstinspires.ftc.robotcore.internal.network.RobotCoreCommandList;
-import org.firstinspires.ftc.robotcore.internal.ui.ProgressParameters;
-import org.firstinspires.ftc.robotcore.internal.usb.exception.RobotUsbException;
+import org.firstinspires.ftc.robotcore.external.navigation.VoltageUnit;
 import org.firstinspires.ftc.robotcore.internal.hardware.TimeWindow;
 import org.firstinspires.ftc.robotcore.internal.system.Assert;
+import org.firstinspires.ftc.robotcore.internal.usb.exception.RobotUsbException;
 
 public class LynxUsbDeviceImplFake extends LynxUsbDeviceImpl {
     public static final String UNRESPONDABLE_MSG = "LynxMessage %s could not receive its response.";
@@ -194,7 +181,7 @@ public class LynxUsbDeviceImplFake extends LynxUsbDeviceImpl {
     private static RobotUsbManagerFake usbManagerFake;
     private static SerialNumber lastFakeSerial;
     private DcMotorImplExFake[] motors = new DcMotorImplExFake[0];
-    // private AnalogInput[] analogInputs = null;
+    private AnalogInputFake[] analogInputs = new AnalogInputFake[0];
     private DigitalChannelImplFake[] digitalChannels = new DigitalChannelImplFake[0];
 
     public LynxUsbDeviceImplFake() {        
@@ -206,9 +193,6 @@ public class LynxUsbDeviceImplFake extends LynxUsbDeviceImpl {
         // System.out.println("[impl fake init] usbDevice: " + usbManagerFake.openBySerialNumber(lastFakeSerial));
     }  
 
-
-    // TODO: Create the analog and digital sensors
-    // * @param analogs Data for all analog inputs. Length must be at or below 4
     /**
      * Creates the payload for the bulk input response. The bytes are stored in 
      * little endian format. 
@@ -218,13 +202,13 @@ public class LynxUsbDeviceImplFake extends LynxUsbDeviceImpl {
      * 
      * @param motors Data for all connected motors. Length must be at or below 4
      * @param digitals Data for all digital inputs. Length must be at or below 8
+     * @param analogs Data for all analog inputs. Length must be at or below 4
      * @return The payload. Contains all data for `LynxGetBulkInputDataResponse`
      */
     protected byte[] readBulkDataPayload(
         DcMotorImplExFake[] motors, 
-        DigitalChannelImplFake[] digitals/* ,
-        AnalogInput[] analogs
-        */
+        DigitalChannelImplFake[] digitals,
+        AnalogInputFake[] analogs
     ) {
         /*
         struct Payload {
@@ -293,7 +277,23 @@ public class LynxUsbDeviceImplFake extends LynxUsbDeviceImpl {
         }
 
         // Validating and reading the analog input        
-        // throwIfWrongSize(analogs, LynxConstants.NUMBER_OF_ANALOG_INPUTS, "analog input");
+        throwIfWrongSize(analogs, LynxConstants.NUMBER_OF_ANALOG_INPUTS, "analog input");
+        for(int i = 0; i < analogs.length; i++) {
+            final AnalogInputFake analog = analogs[i];
+
+            // Skip if the analog input is null
+            if(analog == null) {
+                continue;
+            }
+
+            // Serializing the voltage (in mV) as a little endian short.
+            analog.getControllerFake().setForceReread(true);  // Preventing infinite recursion
+            final int mV = (int) VoltageUnit.MILLIVOLTS
+                    .convert(analog.getVoltage(), AnalogInputFake.DEFAULT_UNITS);
+            payload[ANALOG_START + 2 * i + 0] = getByte(mV, 0);
+            payload[ANALOG_START + 2 * i + 1] = getByte(mV, 1);
+            analog.getControllerFake().setForceReread(false);
+        }
 
         // Validating and reading the digital IO
         // Note that all the inputs from the IO are stored into one byte
@@ -333,8 +333,8 @@ public class LynxUsbDeviceImplFake extends LynxUsbDeviceImpl {
     private LynxGetBulkInputDataResponse handleBulkDataCommand(LynxModuleIntf module) {
         return createFromPayload(module, readBulkDataPayload(
             motors,   
-            digitalChannels/* ,
-            getAnalogInputs()  */
+            digitalChannels,
+            analogInputs
         ));
     }
 
@@ -368,9 +368,9 @@ public class LynxUsbDeviceImplFake extends LynxUsbDeviceImpl {
         LynxMessage response = null;
         LynxAck ack = null;
 
-        // If the command is supported, handle th command and its resopnse (if necessary).
-        // This is hacky and I don't like instaceof chains, but its the best we can do.
-        // NOTE: If you want to fix this, I'm open for a PR!
+        // If the command is supported, handle th command and its response (if necessary).
+        // This is hacky and I don't like instanceof chains, but its the best we can do.
+        // NOTE: If you want to refactor this, I'm open for a PR!
         if(message instanceof LynxGetBulkInputDataCommand) {
             response = handleBulkDataCommand(message.getModule());
         }
@@ -460,10 +460,10 @@ public class LynxUsbDeviceImplFake extends LynxUsbDeviceImpl {
         return this;
     }
 
-    /* public LynxUsbDeviceImplFake setAnalogInputs(AnalogInput[] newInputs) {
+    public LynxUsbDeviceImplFake setAnalogInputs(AnalogInputFake[] newInputs) {
         this.analogInputs = newInputs;
         return this;
-    } */
+    }
  
     @Override
     public void acquireNetworkTransmissionLock(LynxMessage message) {

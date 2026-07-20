@@ -18,42 +18,24 @@
 package clarson.ftc.faker.test;
 
 import clarson.ftc.faker.DistanceSensorFake;
-import clarson.ftc.faker.function.DistanceGetter;
 import clarson.ftc.faker.function.TimedDistanceGetter;
-import clarson.ftc.faker.util.AbstractTwoWayUpdateable;
-import clarson.ftc.faker.util.EasyTimedDistanceGetter;
 import clarson.ftc.faker.updater.ModularUpdater;
 import clarson.ftc.faker.updater.Updater;
-
-import static clarson.ftc.faker.test.TestUtil.*;
-
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-
-import static org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit.MM;
-
-import org.junit.jupiter.api.AssertionFailureBuilder;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.function.Executable;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Timeout;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assumptions.*;
-
-import org.junit.jupiter.params.Parameter;
-import org.junit.jupiter.params.ParameterizedClass;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
-import org.junit.jupiter.params.provider.EnumSource;
-
+import clarson.ftc.faker.util.AbstractTwoWayUpdateable;
+import clarson.ftc.faker.util.EasyTimedDistanceGetter;
 import java.util.function.BiFunction;
 import java.util.function.DoubleSupplier;
-
-import static java.util.concurrent.TimeUnit.SECONDS;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.Parameter;
+import org.junit.jupiter.params.ParameterizedClass;
+import org.junit.jupiter.params.provider.EnumSource;
+import static org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit.MM;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assumptions.*;
 
 class DistanceSensorFakeUnitTest {
     @DisplayName("Can construct")
@@ -320,9 +302,9 @@ class DistanceSensorFakeUnitTest {
                 }
             }
 
-            @DisplayName("setState delays the simulation by the correct amount of time")
+            @DisplayName("getDistance delays the simulation by the correct amount of time")
             @Test
-            void setStateDelaysByTheCorrectTime() {
+            void getDistanceDelaysByTheCorrectTime() {
                 sensor.getDistance(MM);
                 assertEquals(Updater.UpdateDelaySource.I2C.length, counter.getLastDeltaSec(), "false delta sec digital");
 

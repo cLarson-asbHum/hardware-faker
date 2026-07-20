@@ -18,22 +18,19 @@
 
 package clarson.ftc.faker;
 
-import com.qualcomm.robotcore.hardware.ServoImplEx;
-import com.qualcomm.robotcore.hardware.PwmControl;
-import com.qualcomm.robotcore.hardware.configuration.typecontainers.ServoConfigurationType;
-
 import clarson.ftc.faker.updater.Rotateable;
 import clarson.ftc.faker.updater.SimulateDelay;
 import clarson.ftc.faker.updater.TwoWayUpdateable;
-import clarson.ftc.faker.updater.Updateable;
 import clarson.ftc.faker.updater.Updater;
 import clarson.ftc.faker.wrapper.PositionalServoData;
-
-import static clarson.ftc.faker.updater.UpdatesWhen.ALWAYS;
-import static clarson.ftc.faker.updater.Updater.UpdateDelaySource.SERVO;
-
+import com.qualcomm.robotcore.hardware.configuration.typecontainers.ServoConfigurationType;
+import com.qualcomm.robotcore.hardware.PwmControl;
+import com.qualcomm.robotcore.hardware.ServoImplEx;
 import java.util.HashSet;
-import java.util.Set;
+import static clarson.ftc.faker.updater.Updater.UpdateDelaySource.SERVO;
+import static clarson.ftc.faker.updater.UpdatesWhen.ALWAYS;
+import static clarson.ftc.faker.updater.UpdatesWhen.CONDITIONAL;
+import static clarson.ftc.faker.updater.UpdatesWhen.NEVER;
 
 public class ServoImplExFake extends ServoImplEx implements Rotateable, TwoWayUpdateable {
     public final static ServoConfigurationType getFakeConfiguration(PositionalServoData data) {
@@ -55,7 +52,7 @@ public class ServoImplExFake extends ServoImplEx implements Rotateable, TwoWayUp
         return -1;
     }
 
-    private Set<Updater> updaters = new HashSet<>();
+    private HashSet<Updater> updaters = new HashSet<>();
 
     public ServoImplExFake(double rpm, double maxRevolutions) {
         this(rpm, maxRevolutions, 0, PwmRange.defaultRange);
@@ -98,11 +95,9 @@ public class ServoImplExFake extends ServoImplEx implements Rotateable, TwoWayUp
     }
 
     public PositionalServoData getData() {
-        // What is this, Lisp?
-        return (PositionalServoData) (
-            ((ServoControllerExFake) this.getController())
-                .getData(this.getPortNumber())
-        );
+        return (PositionalServoData) (this
+            .getControllerFake()
+            .getData(this.getPortNumber()));
     }
 
     @Override
@@ -140,22 +135,41 @@ public class ServoImplExFake extends ServoImplEx implements Rotateable, TwoWayUp
         this.updaters.remove(updater);
     }
 
+    public ServoControllerExFake getControllerFake() {
+        return (ServoControllerExFake) super.getController();
+    }
+
     // #############################################################################
     //   NOTE: The following section only is super methods with delay simulation
     //         Nothing below is more informative than its Javadoc
     // #############################################################################
     
+    /**
+     * Simulates delay only when the set position is different form the last known 
+     * position
+     * 
+     * @param position
+     */
     @Override 
-    @SimulateDelay(ALWAYS)
+    @SimulateDelay(CONDITIONAL)
     public void setPosition(double position) {
-        Updater.updateAllOnce(updaters, SERVO);
+        final ServoControllerExFake controller = this.getControllerFake();
+        final int port = this.getPortNumber();
+        final double lastKnown = controller.lastKnownPosition(port);
+        controller.enableDry(true); // Prevent the position fom actually being changed
         super.setPosition(position);
+        controller.enableDry(false);
+        final double newPos = controller.lastKnownPosition(port);
+
+        if(newPos != lastKnown) {
+            Updater.updateAllOnce(updaters, SERVO);
+            super.setPosition(position);
+        } 
     }
     
     @Override 
-    @SimulateDelay(ALWAYS)
+    @SimulateDelay(NEVER)
     public double getPosition() {
-        Updater.updateAllOnce(updaters, SERVO);
         return super.getPosition();
     }
     

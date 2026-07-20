@@ -18,12 +18,8 @@
 
 package clarson.ftc.faker.wrapper;
 
-import com.qualcomm.robotcore.hardware.HardwareDevice;
 import com.qualcomm.robotcore.hardware.CRServoImplEx;
-import com.qualcomm.robotcore.hardware.configuration.typecontainers.ServoConfigurationType;
 import com.qualcomm.robotcore.util.Range;
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-
 import static com.qualcomm.robotcore.hardware.PwmControl.PwmRange;
 
 public class ContinuousServoData extends ServoData<CRServoImplEx> {

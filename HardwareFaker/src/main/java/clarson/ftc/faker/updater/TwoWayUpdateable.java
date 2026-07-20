@@ -18,7 +18,6 @@
 
 package clarson.ftc.faker.updater;
 
-
 /**
  * Represents an Updateable that remembers the Updaters it has been registered 
  * with. When unregistered, it forgets the given Updater. Both of these operations-

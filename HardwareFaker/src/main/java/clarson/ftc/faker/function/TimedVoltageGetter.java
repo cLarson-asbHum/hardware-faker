@@ -1,5 +1,5 @@
 /*
- * DistanceGetter.java
+ * TimedVoltageGetter.java
  * 
  * Copyright 2026 Connor Larson
  * 
@@ -18,9 +18,8 @@
 
 package clarson.ftc.faker.function;
 
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import clarson.ftc.faker.updater.Updateable;
 
-@FunctionalInterface
-public interface DistanceGetter {
-    double getDistance(DistanceUnit units);
+public interface TimedVoltageGetter extends VoltageGetter, Updateable {
+    // No new methods
 }

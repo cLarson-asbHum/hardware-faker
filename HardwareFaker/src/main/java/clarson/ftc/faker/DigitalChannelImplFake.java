@@ -19,24 +19,20 @@
 package clarson.ftc.faker;
 
 import clarson.ftc.faker.function.TimedStateGetter;
-import clarson.ftc.faker.updater.Updater;
-import clarson.ftc.faker.updater.TwoWayUpdateable;
 import clarson.ftc.faker.updater.ModularUpdater;
 import clarson.ftc.faker.updater.SimulateDelay;
+import clarson.ftc.faker.updater.TwoWayUpdateable;
+import clarson.ftc.faker.updater.Updater;
 import clarson.ftc.faker.util.EasyTimedStateGetter;
 import clarson.ftc.faker.wrapper.DigitalChannelData;
-
-import static clarson.ftc.faker.updater.UpdatesWhen.ALWAYS;
-import static clarson.ftc.faker.updater.UpdatesWhen.CONDITIONAL;
-import static clarson.ftc.faker.updater.UpdatesWhen.ON_BULK_READS;
-
 import com.qualcomm.hardware.lynx.commands.core.LynxGetSingleDIOInputCommand;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.DigitalChannelController;
 import com.qualcomm.robotcore.hardware.DigitalChannelImpl;
-
-import java.util.HashSet;
 import java.util.function.BooleanSupplier;
+import java.util.HashSet;
+import static clarson.ftc.faker.updater.UpdatesWhen.ALWAYS;
+import static clarson.ftc.faker.updater.UpdatesWhen.ON_BULK_READS;
 
 public class DigitalChannelImplFake extends DigitalChannelImpl implements TwoWayUpdateable {
     private static DigitalChannelControllerFake lastController = null;    

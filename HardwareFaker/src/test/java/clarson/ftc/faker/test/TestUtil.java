@@ -22,7 +22,6 @@ import org.junit.jupiter.api.AssertionFailureBuilder;
 import org.junit.jupiter.api.function.Executable;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-
 public class TestUtil {
     /**
      * Returns true if the given code throws an exception; otherwise, it

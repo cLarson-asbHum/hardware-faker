@@ -20,14 +20,11 @@ package clarson.ftc.faker.util;
 
 import clarson.ftc.faker.function.ThreadSleepMethod;
 import clarson.ftc.faker.updater.Updater;
-
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
-
 import java.time.Duration;
 import java.util.Arrays;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 

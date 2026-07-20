@@ -19,9 +19,8 @@
 package clarson.ftc.faker;
 
 import clarson.ftc.faker.wrapper.DigitalChannelData;
-
-import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.hardware.lynx.commands.core.LynxGetSingleDIOInputCommand;
+import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.exception.RobotCoreException;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.DigitalChannelController;
@@ -42,8 +41,8 @@ public class DigitalChannelControllerFake implements DigitalChannelController {
         }
     }
 
-    private DigitalChannelData[] channels = new DigitalChannelData[8];
-    private SerialNumber serialNumber = SerialNumber.createEmbedded();
+    private DigitalChannelData[] channels = new DigitalChannelData[this.totalPorts()];
+    private final SerialNumber serialNumber = SerialNumber.createEmbedded();
     private boolean shouldReread = false;
     private LynxModuleHardwareFake module = null;
 
@@ -59,6 +58,11 @@ public class DigitalChannelControllerFake implements DigitalChannelController {
         this.module = newModule;
     }
 
+    
+    public int totalPorts() {
+        return 8;
+    }
+
     public LynxModuleHardwareFake getLynxModule() {
         return this.module;
     }
@@ -72,7 +76,7 @@ public class DigitalChannelControllerFake implements DigitalChannelController {
      * @return Whether the port exists and is unnoccupied.
      */
     public boolean isPortAvailable(int portNumber) {
-        return channels[portNumber] == null && portNumber >= 0 && portNumber <= 7;
+        return channels[portNumber] == null && portNumber >= 0 && portNumber <= this.totalPorts();
     }
 
     /**
@@ -215,6 +219,6 @@ public class DigitalChannelControllerFake implements DigitalChannelController {
     
     @Override
     public void resetDeviceConfigurationForOpMode() {
-        this.channels = new DigitalChannelData[8];
+        this.channels = new DigitalChannelData[this.totalPorts()];
     }
 }

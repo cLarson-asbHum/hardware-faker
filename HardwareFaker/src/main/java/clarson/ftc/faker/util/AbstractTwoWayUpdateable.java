@@ -18,13 +18,11 @@
 
 package clarson.ftc.faker.util;
 
-
-import clarson.ftc.faker.updater.Updater;
 import clarson.ftc.faker.updater.TwoWayUpdateable;
-
+import clarson.ftc.faker.updater.Updater;
+import java.util.function.DoubleFunction;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.function.DoubleFunction;
 
 /**
  * Implements methods of the TwoWayUpdateable interface which have standard implementations.

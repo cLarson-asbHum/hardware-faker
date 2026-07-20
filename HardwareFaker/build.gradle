@@ -43,13 +43,13 @@ android {
 }
 
 dependencies {
-    implementation 'org.firstinspires.ftc:RobotCore:11.1.0'
-    implementation 'org.firstinspires.ftc:Hardware:11.1.0'
+    implementation 'org.firstinspires.ftc:RobotCore:11.2.0'
+    implementation 'org.firstinspires.ftc:Hardware:11.2.0'
     implementation 'androidx.appcompat:appcompat:1.2.0'
     
-    testImplementation 'org.junit.jupiter:junit-jupiter:5.13.4'
-    testRuntimeOnly 'org.junit.platform:junit-platform-engine:1.13.4'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.13.4'
+    testImplementation 'org.junit.jupiter:junit-jupiter:6.1.0'
+    testRuntimeOnly 'org.junit.platform:junit-platform-engine:6.1.0'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher:6.1.0'
 }
 
 tasks.withType(Test) {

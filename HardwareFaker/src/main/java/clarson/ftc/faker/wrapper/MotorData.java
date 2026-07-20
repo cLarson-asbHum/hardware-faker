@@ -18,19 +18,15 @@
 
 package clarson.ftc.faker.wrapper;
 
-// import com.qualcomm.robotcore.hardware.HardwareDevice;
+import clarson.ftc.faker.updater.Rotateable;
+import clarson.ftc.faker.updater.Updateable;
+import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorImplEx;
 import com.qualcomm.robotcore.hardware.PIDCoefficients;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
-import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
 import com.qualcomm.robotcore.util.Range;
-
-import clarson.ftc.faker.updater.Rotateable;
-import clarson.ftc.faker.updater.Updateable;
-
 import java.util.HashMap;
-
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
 public class MotorData implements Rotateable, Updateable {

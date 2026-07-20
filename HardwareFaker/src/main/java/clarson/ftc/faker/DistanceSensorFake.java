@@ -18,23 +18,17 @@
 
 package clarson.ftc.faker;
 
-import clarson.ftc.faker.updater.SimulateDelay;
-
 import clarson.ftc.faker.function.DistanceGetter;
 import clarson.ftc.faker.function.TimedDistanceGetter;
+import clarson.ftc.faker.updater.SimulateDelay;
 import clarson.ftc.faker.updater.TwoWayUpdateable;
 import clarson.ftc.faker.updater.Updater;
 import clarson.ftc.faker.util.EasyTimedDistanceGetter;
 import clarson.ftc.faker.wrapper.SensorFakeBase;
-
-import static clarson.ftc.faker.updater.UpdatesWhen.ALWAYS;
-
 import com.qualcomm.robotcore.hardware.DistanceSensor;
-
 import java.util.HashSet;
-import java.util.Set;
-
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import static clarson.ftc.faker.updater.UpdatesWhen.ALWAYS;
 
 /**
  * Represents a sensor that reads a distance. This serves as a wrapper for 
@@ -42,7 +36,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
  * and able to simulate delay of reading I2C.
  */
 public class DistanceSensorFake extends SensorFakeBase<TimedDistanceGetter> implements DistanceSensor, TwoWayUpdateable {
-    protected final Set<Updater> rememberedUpdaters = new HashSet<>();
+    protected final HashSet<Updater> rememberedUpdaters = new HashSet<>();
 
     /**
      * Creates a distance sensor whose getDistance() is implemented by the given 

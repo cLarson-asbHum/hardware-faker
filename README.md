@@ -12,22 +12,19 @@ TODO: Table of contents??
 This project contains several test fakes of hardware devices common to FTC 
 projects. Currently implemented test doubles include the following:
 
+ * `ColorRangeSensor`
  * `CRServoImplEx`
  * `DcMotorControllerEx`
  * `DcMotorImplEx`
  * `DigitalChannelController`
  * `DigitalChannelImpl`
+ * `DistanceSensor`
  * `LED`
  * `LynxModule`
  * `LynxModule` (partial, see "[Known Issues](#known-issues)")
  * `LynxUsbDeviceImpl`
  * `ServoControllerEx`
  * `ServoImplEx`
-
-A few others have been written but not implemented:
-
- * `ColorRangeSensor`
- * `DistanceSensor`
 
 Along with these, the following classes are planned to be implemented:
 

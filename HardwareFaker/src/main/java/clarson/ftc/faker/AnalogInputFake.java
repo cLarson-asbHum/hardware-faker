@@ -138,7 +138,7 @@ public class AnalogInputFake extends AnalogInput implements TwoWayUpdateable {
         updaters.remove(updater);
     }
 
-    double getLastVoltage() {
+    public double getLastVoltage() {
         return this.lastVoltage;
     }
     

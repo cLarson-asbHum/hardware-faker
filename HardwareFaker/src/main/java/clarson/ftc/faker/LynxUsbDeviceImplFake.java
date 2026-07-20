@@ -296,7 +296,7 @@ public class LynxUsbDeviceImplFake extends LynxUsbDeviceImpl {
             final AnalogInputFake analog = analogs[i];
 
             // Skip if the analog input is null
-            if(analogs == null) {
+            if(analog == null) {
                 continue;
             }
 

@@ -75,6 +75,7 @@ public class AnalogInputFake extends AnalogInput implements TwoWayUpdateable {
         this.controller = lastController;
         this.port = 0;
         this.underlyingGetter = new EasyTimedVoltageGetter(voltageGetter);
+        this.lastVoltage = underlyingGetter.getVoltage(DEFAULT_UNITS);
     }
     
     public AnalogInputFake(TimedVoltageGetter voltageGetter) {
@@ -83,6 +84,7 @@ public class AnalogInputFake extends AnalogInput implements TwoWayUpdateable {
         this.controller = lastController;
         this.port = 0;
         this.underlyingGetter = voltageGetter;
+        this.lastVoltage = underlyingGetter.getVoltage(DEFAULT_UNITS);
     }
 
     public AnalogInputFake(TimedVoltageGetter voltageGetter, AnalogInputControllerFake controller, int port) {
@@ -96,6 +98,7 @@ public class AnalogInputFake extends AnalogInput implements TwoWayUpdateable {
         this.controller = controller;
         this.port = port;
         this.underlyingGetter = voltageGetter;
+        this.lastVoltage = underlyingGetter.getVoltage(DEFAULT_UNITS);
     }
 
     public AnalogInputFake(TimedVoltageGetter voltageGetter, AnalogInputControllerFake controller) {

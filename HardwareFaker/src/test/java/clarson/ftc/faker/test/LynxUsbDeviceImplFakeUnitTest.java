@@ -18,6 +18,7 @@
 
 package clarson.ftc.faker.test;
 
+import clarson.ftc.faker.AnalogInputFake;
 import clarson.ftc.faker.DcMotorControllerExFake;
 import clarson.ftc.faker.DcMotorImplExFake;
 import clarson.ftc.faker.DigitalChannelControllerFake;
@@ -46,6 +47,8 @@ import com.qualcomm.hardware.lynx.commands.core.LynxGetBulkInputDataResponse;
 
 import static com.qualcomm.hardware.lynx.commands.standard.LynxNack.StandardReasonCode;
 
+import org.firstinspires.ftc.robotcore.external.navigation.VoltageUnit;
+
 import org.junit.jupiter.api.AssertionFailureBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -67,6 +70,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.regex.Pattern;
+import java.util.function.DoubleSupplier;
 import java.util.regex.Matcher;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -127,11 +131,22 @@ class LynxUsbDeviceImplFakeUnitTest {
 
         DigitalChannelControllerFake digitalController = new DigitalChannelControllerFake(null);
         DigitalChannelImplFake[] channels = new DigitalChannelImplFake[8];
+        AnalogInputFake[] analogs = {
+            null,
+            null,
+            new AnalogInputFake(() -> Math.random()),
+            new AnalogInputFake(new DoubleSupplier() {
+                double i = 0;
+                public double getAsDouble() {
+                    i += 0.1415926536;
+                    return i;
+                }
+            }),
+        };
 
         @BeforeEach
         void createLynxUsbDevice() {
             lynx = new LynxUsbDeviceImplFake();
-            lynx.setMotors(motors);
 
             channels = new DigitalChannelImplFake[] {
                 new DigitalChannelImplFake(new DigitalChannelData(), digitalController, 0),
@@ -144,7 +159,10 @@ class LynxUsbDeviceImplFakeUnitTest {
                 new DigitalChannelImplFake(new DigitalChannelData(new EasyTimedStateGetter((deltaSec) -> deltaSec % 1 < 0.5)), digitalController, 6),
                 null
             };
+            
+            lynx.setMotors(motors);            
             lynx.setDigitalChannels(channels);
+            lynx.setAnalogInputs(analogs);
         }
 
         @DisplayName("Create LynxModule") 
@@ -524,22 +542,28 @@ class LynxUsbDeviceImplFakeUnitTest {
                     // NOTE: Not testing the isOverCurrent as that relies on a flawed current reading
                 }
 
+                for(int i = 0; i < analogs.length; i++) {
+                    final AnalogInputFake analog = analogs[i];
+                    final int portNumber = i; 
 
-                // TODO: Verify analog inputs
+                    // Check that the data is zero if the analog is null
+                    if(analog == null) {
+                        System.out.println("[is correct] port: " + portNumber);
+                        System.out.println("[is correct] current port is null");
+                        
+                        assertEquals(0, response.getAnalogInput(portNumber));
+                        continue; // Don't do the rest of the stuff
+                    }
+
+                    // Only runs if the analog is non-null:
+                    final double expectedMv = VoltageUnit.VOLTS.toMilliVolts(analog.getLastVoltage());
+                    System.out.println("[is correct] port: " + portNumber);
+                    System.out.println("[is correct] mV: " + expectedMv);
+                    assertEquals((int) expectedMv, response.getAnalogInput(portNumber));
+
+                    // NOTE: Not testing the isOverCurrent as that relies on a flawed current reading
+                }
             }
-            
-            /* // TODO: Move these tests into a LynxModuleUnitTest class
-            @DisplayName("Bulk OFF never issues")
-            @Test
-            void bulkOffNeverIsses() {}
-
-            @DisplayName("Bulk AUTOMATIC issues only on repeated calls")
-            @Test
-            void bulkAutoIssuesOnRepeatedCalls() {}
-
-            @DisplayName("Bulk MANUAL issues only when clear")
-            @Test
-            void bulkAutoIssuesWhenClear() {} */
         }
 
     }

@@ -20,6 +20,8 @@ package clarson.ftc.faker;
 
 import clarson.ftc.faker.LynxModuleHardwareFake;
 
+import com.qualcomm.hardware.lynx.LynxModule;
+import com.qualcomm.hardware.lynx.commands.core.LynxGetADCCommand;
 import com.qualcomm.robotcore.hardware.AnalogInputController;
 import com.qualcomm.robotcore.util.SerialNumber;
 import com.qualcomm.robotcore.exception.RobotCoreException;
@@ -96,14 +98,25 @@ public class AnalogInputControllerFake implements AnalogInputController {
     /**
      * Get the value of this analog input
      *
-     * Return the current ADC results from the A0-A7 channel input pins.
+     * Return the current ADC results from the A0-A7 analog input pins.
      * 
-     * @param channel which analog channel to read
+     * @param analog which analog analog to read
      * @return the current voltage in volts
      */
     @Override
-    public double getAnalogInputVoltage(int channel) {
-        return analogs[channel].getLastVoltage();
+    public double getAnalogInputVoltage(int analog) {
+        if(!shouldReread && module.getBulkCachingMode() != LynxModule.BulkCachingMode.OFF) {
+            final LynxModule.BulkData data = module.recordBulkCachingCommandIntent(
+                new LynxGetADCCommand(
+                    module,
+                    LynxGetADCCommand.Channel.user(analog),
+                    LynxGetADCCommand.Mode.ENGINEERING
+                ),
+                ""
+            );
+        }
+
+        return analogs[analog].getLastVoltage();
     }
 
     /**

@@ -20,50 +20,30 @@ package clarson.ftc.faker.test;
 
 import clarson.ftc.faker.AnalogInputControllerFake;
 import clarson.ftc.faker.AnalogInputFake;
+import clarson.ftc.faker.function.TimedVoltageGetter;
+import clarson.ftc.faker.function.VoltageGetter;
 import clarson.ftc.faker.LynxModuleHardwareFake;
 import clarson.ftc.faker.LynxUsbDeviceImplFake;
-import clarson.ftc.faker.function.VoltageGetter;
-import clarson.ftc.faker.function.TimedVoltageGetter;
 import clarson.ftc.faker.updater.ModularUpdater;
-import clarson.ftc.faker.updater.Updateable;
 import clarson.ftc.faker.updater.Updater;
 import clarson.ftc.faker.util.AbstractTwoWayUpdateable;
 import clarson.ftc.faker.util.EasyTimedVoltageGetter;
-import clarson.ftc.faker.util.UpdateableSupplier;
-
-import static clarson.ftc.faker.test.TestUtil.*;
-
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.exception.RobotCoreException;
 import com.qualcomm.robotcore.hardware.LynxModuleDescription;
-
+import java.util.function.BiFunction;
 import org.firstinspires.ftc.robotcore.external.navigation.VoltageUnit;
-import static org.firstinspires.ftc.robotcore.external.navigation.VoltageUnit.VOLTS;
-
-import org.junit.jupiter.api.AssertionFailureBuilder;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.function.Executable;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Timeout;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assumptions.*;
-
 import org.junit.jupiter.params.Parameter;
 import org.junit.jupiter.params.ParameterizedClass;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.junit.jupiter.params.provider.EnumSource;
-
-import java.util.function.BiFunction;
-
-import static java.util.concurrent.TimeUnit.SECONDS;
+import static clarson.ftc.faker.test.TestUtil.*;
+import static org.firstinspires.ftc.robotcore.external.navigation.VoltageUnit.VOLTS;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assumptions.*;
 
 class AnalogInputFakeUnitTest {
     @DisplayName("Can Construct")

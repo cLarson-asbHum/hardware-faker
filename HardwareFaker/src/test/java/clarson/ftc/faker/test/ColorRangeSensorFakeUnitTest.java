@@ -18,46 +18,30 @@
 package clarson.ftc.faker.test;
 
 import clarson.ftc.faker.ColorRangeSensorFake;
-import clarson.ftc.faker.LEDFake;
 import clarson.ftc.faker.function.ColorGetter;
 import clarson.ftc.faker.function.ColorRangeGetter;
-import clarson.ftc.faker.function.DistanceGetter;
 import clarson.ftc.faker.function.TimedDistanceGetter;
+import clarson.ftc.faker.LEDFake;
 import clarson.ftc.faker.updater.ModularUpdater;
 import clarson.ftc.faker.updater.Updater;
 import clarson.ftc.faker.util.AbstractTwoWayUpdateable;
 import clarson.ftc.faker.util.EasyColorRangeGetter;
 import clarson.ftc.faker.util.EasyTimedDistanceGetter;
-
-import static clarson.ftc.faker.test.TestUtil.*;
-
 import com.qualcomm.robotcore.hardware.NormalizedRGBA;
-
-import java.util.function.*;
-
-import static java.util.concurrent.TimeUnit.SECONDS;
-
-import org.junit.jupiter.api.AssertionFailureBuilder;
+import java.util.function.BiFunction;
+import java.util.function.DoubleSupplier;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.function.Executable;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Timeout;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assumptions.*;
-
 import org.junit.jupiter.params.Parameter;
 import org.junit.jupiter.params.ParameterizedClass;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.junit.jupiter.params.provider.EnumSource;
-
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import static clarson.ftc.faker.test.TestUtil.*;
 import static org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit.MM;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assumptions.*;
 
 class ColorRangeSensorFakeUnitTest {
     @DisplayName("Can construct")

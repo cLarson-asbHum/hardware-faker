@@ -19,24 +19,16 @@
 package clarson.ftc.faker;
 
 import androidx.annotation.NonNull;
-
 import clarson.ftc.faker.wrapper.ContinuousServoData;
 import clarson.ftc.faker.wrapper.PositionalServoData;
 import clarson.ftc.faker.wrapper.ServoData;
-
-import com.qualcomm.robotcore.hardware.HardwareDevice;
+import com.qualcomm.robotcore.hardware.configuration.typecontainers.ServoConfigurationType;
 import com.qualcomm.robotcore.hardware.CRServoImplEx;
+import com.qualcomm.robotcore.hardware.HardwareDevice;
 import com.qualcomm.robotcore.hardware.ServoControllerEx;
 import com.qualcomm.robotcore.hardware.ServoImplEx;
-import com.qualcomm.robotcore.hardware.configuration.typecontainers.ServoConfigurationType;
 import com.qualcomm.robotcore.util.Range;
-
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-// import java.util.WeakHashMap;
-
 import static com.qualcomm.robotcore.hardware.PwmControl.PwmRange;
 
 public class ServoControllerExFake implements ServoControllerEx {

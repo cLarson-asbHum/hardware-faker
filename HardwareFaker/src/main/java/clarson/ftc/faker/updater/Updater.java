@@ -18,10 +18,9 @@
 
 package clarson.ftc.faker.updater;
 
-import static com.qualcomm.hardware.lynx.LynxModule.BulkData;
-
 import java.util.Collection;
 import java.util.Iterator;
+import static com.qualcomm.hardware.lynx.LynxModule.BulkData;
 
 public interface Updater {
     /**

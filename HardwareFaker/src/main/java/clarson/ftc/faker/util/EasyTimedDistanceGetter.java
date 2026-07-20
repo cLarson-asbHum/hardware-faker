@@ -20,10 +20,8 @@ package clarson.ftc.faker.util;
 
 import clarson.ftc.faker.function.DistanceGetter;
 import clarson.ftc.faker.function.TimedDistanceGetter;
-
 import java.util.function.BiFunction;
 import java.util.function.DoubleSupplier;
-
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 /**

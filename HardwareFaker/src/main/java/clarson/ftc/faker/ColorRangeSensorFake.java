@@ -24,7 +24,6 @@
 package clarson.ftc.faker;
 
 import androidx.annotation.ColorInt;
-
 import clarson.ftc.faker.function.ColorGetter;
 import clarson.ftc.faker.function.ColorRangeGetter;
 import clarson.ftc.faker.function.DistanceGetter;
@@ -32,21 +31,17 @@ import clarson.ftc.faker.updater.SimulateDelay;
 import clarson.ftc.faker.updater.TwoWayUpdateable;
 import clarson.ftc.faker.updater.Updater;
 import clarson.ftc.faker.util.EasyColorRangeGetter;
-import clarson.ftc.faker.util.NoImplementationError;
 import clarson.ftc.faker.wrapper.SensorFakeBase;
-
-import static clarson.ftc.faker.updater.UpdatesWhen.ALWAYS;
-import static clarson.ftc.faker.updater.UpdatesWhen.CONDITIONAL;
-import static clarson.ftc.faker.updater.UpdatesWhen.NEVER;
-
 import com.qualcomm.robotcore.hardware.ColorRangeSensor;
 import com.qualcomm.robotcore.hardware.I2cAddr;
 import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 import com.qualcomm.robotcore.hardware.SwitchableLight;
 import com.qualcomm.robotcore.util.Range;
-
-import java.util.Set;
 import java.util.HashSet;
+import java.util.Set;
+import static clarson.ftc.faker.updater.UpdatesWhen.ALWAYS;
+import static clarson.ftc.faker.updater.UpdatesWhen.CONDITIONAL;
+import static clarson.ftc.faker.updater.UpdatesWhen.NEVER;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 

@@ -19,8 +19,8 @@
 package clarson.ftc.faker.test.updater;
 
 import clarson.ftc.faker.CRServoImplExFake;
-import clarson.ftc.faker.DcMotorImplExFake;
 import clarson.ftc.faker.DcMotorControllerExFake;
+import clarson.ftc.faker.DcMotorImplExFake;
 import clarson.ftc.faker.LynxModuleHardwareFake;
 import clarson.ftc.faker.LynxUsbDeviceImplFake;
 import clarson.ftc.faker.updater.ModularUpdater;
@@ -29,46 +29,32 @@ import clarson.ftc.faker.updater.Updater;
 import clarson.ftc.faker.wrapper.ContinuousServoData;
 import clarson.ftc.faker.wrapper.MotorData;
 import clarson.ftc.faker.wrapper.ServoData;
-
-import static clarson.ftc.faker.test.TestUtil.*;
-
-import com.qualcomm.hardware.lynx.LynxModule;
-import com.qualcomm.hardware.lynx.commands.LynxCommand;
-import com.qualcomm.hardware.lynx.commands.LynxMessage;
 import com.qualcomm.hardware.lynx.commands.core.LynxDekaInterfaceCommand;
 import com.qualcomm.hardware.lynx.commands.core.LynxGetBulkInputDataCommand;
-import com.qualcomm.hardware.lynx.commands.core.LynxGetBulkInputDataResponse;
 import com.qualcomm.hardware.lynx.commands.core.LynxGetMotorEncoderPositionCommand;
 import com.qualcomm.hardware.lynx.commands.core.LynxIsMotorAtTargetCommand;
+import com.qualcomm.hardware.lynx.commands.LynxMessage;
 import com.qualcomm.hardware.lynx.commands.standard.LynxKeepAliveCommand;
-import com.qualcomm.robotcore.hardware.LynxModuleDescription;
+import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.exception.RobotCoreException;
-
-import org.junit.jupiter.api.AssertionFailureBuilder;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.function.Executable;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Timeout;
-import org.junit.jupiter.params.Parameter;
-import org.junit.jupiter.params.ParameterizedClass;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
-import org.junit.jupiter.params.provider.MethodSource;
-import org.junit.jupiter.params.provider.Arguments;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assumptions.*;
-
-import java.util.ArrayList;
+import com.qualcomm.robotcore.hardware.LynxModuleDescription;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Stream;
-
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+import static clarson.ftc.faker.test.TestUtil.*;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assumptions.*;
 
 class ModularUpdaterUnitTest {
     @DisplayName("Can construct")

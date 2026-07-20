@@ -18,24 +18,19 @@
 
 package clarson.ftc.faker;
 
-import com.qualcomm.robotcore.hardware.ServoImplEx;
-import com.qualcomm.robotcore.hardware.PwmControl;
-import com.qualcomm.robotcore.hardware.configuration.typecontainers.ServoConfigurationType;
-
 import clarson.ftc.faker.updater.Rotateable;
 import clarson.ftc.faker.updater.SimulateDelay;
 import clarson.ftc.faker.updater.TwoWayUpdateable;
-import clarson.ftc.faker.updater.Updateable;
 import clarson.ftc.faker.updater.Updater;
 import clarson.ftc.faker.wrapper.PositionalServoData;
-
+import com.qualcomm.robotcore.hardware.configuration.typecontainers.ServoConfigurationType;
+import com.qualcomm.robotcore.hardware.PwmControl;
+import com.qualcomm.robotcore.hardware.ServoImplEx;
+import java.util.HashSet;
+import static clarson.ftc.faker.updater.Updater.UpdateDelaySource.SERVO;
 import static clarson.ftc.faker.updater.UpdatesWhen.ALWAYS;
 import static clarson.ftc.faker.updater.UpdatesWhen.CONDITIONAL;
 import static clarson.ftc.faker.updater.UpdatesWhen.NEVER;
-import static clarson.ftc.faker.updater.Updater.UpdateDelaySource.SERVO;
-
-import java.util.HashSet;
-import java.util.Set;
 
 public class ServoImplExFake extends ServoImplEx implements Rotateable, TwoWayUpdateable {
     public final static ServoConfigurationType getFakeConfiguration(PositionalServoData data) {
@@ -57,7 +52,7 @@ public class ServoImplExFake extends ServoImplEx implements Rotateable, TwoWayUp
         return -1;
     }
 
-    private Set<Updater> updaters = new HashSet<>();
+    private HashSet<Updater> updaters = new HashSet<>();
 
     public ServoImplExFake(double rpm, double maxRevolutions) {
         this(rpm, maxRevolutions, 0, PwmRange.defaultRange);

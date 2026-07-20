@@ -18,14 +18,11 @@
 
 package clarson.ftc.faker.updater;
 
+import clarson.ftc.faker.LynxModuleHardwareFake;
 import com.qualcomm.hardware.lynx.commands.core.LynxDekaInterfaceCommand;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.hardware.lynx.LynxModule.BulkData;
-
-import clarson.ftc.faker.LynxModuleHardwareFake;
-
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;

@@ -25,17 +25,14 @@ import clarson.ftc.faker.updater.SimulateDelay;
 import clarson.ftc.faker.updater.TwoWayUpdateable;
 import clarson.ftc.faker.updater.Updater;
 import clarson.ftc.faker.util.EasyTimedVoltageGetter;
-
 import com.qualcomm.hardware.lynx.commands.core.LynxGetADCCommand;
 import com.qualcomm.robotcore.hardware.AnalogInput;
+import java.util.function.DoubleSupplier;
+import java.util.HashSet;
 import org.firstinspires.ftc.robotcore.external.navigation.VoltageUnit;
-
 import static clarson.ftc.faker.updater.Updater.UpdateDelaySource.ANALOG;
 import static clarson.ftc.faker.updater.UpdatesWhen.NEVER;
 import static clarson.ftc.faker.updater.UpdatesWhen.ON_BULK_READS;
-
-import java.util.HashSet;
-import java.util.function.DoubleSupplier;
 
 public class AnalogInputFake extends AnalogInput implements TwoWayUpdateable {
     public static final VoltageUnit DEFAULT_UNITS = VoltageUnit.VOLTS;

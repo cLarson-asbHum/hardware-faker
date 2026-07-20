@@ -25,55 +25,33 @@ import clarson.ftc.faker.DigitalChannelControllerFake;
 import clarson.ftc.faker.DigitalChannelImplFake;
 import clarson.ftc.faker.LynxModuleHardwareFake;
 import clarson.ftc.faker.LynxUsbDeviceImplFake;
-import clarson.ftc.faker.updater.ModularUpdater;
-import clarson.ftc.faker.updater.Updateable;
 import clarson.ftc.faker.util.EasyTimedStateGetter;
 import clarson.ftc.faker.util.UnsupportedLynxUsbCommandException;
-import clarson.ftc.faker.wrapper.MotorData;
 import clarson.ftc.faker.wrapper.DigitalChannelData;
-
-import static clarson.ftc.faker.test.TestUtil.*;
-
+import clarson.ftc.faker.wrapper.MotorData;
+import com.qualcomm.hardware.lynx.commands.core.LynxGetBulkInputDataCommand;
+import com.qualcomm.hardware.lynx.commands.core.LynxGetBulkInputDataResponse;
+import com.qualcomm.hardware.lynx.commands.LynxCommand;
+import com.qualcomm.hardware.lynx.commands.LynxMessage;
+import com.qualcomm.hardware.lynx.LynxModule;
+import com.qualcomm.hardware.lynx.LynxNackException;
 import com.qualcomm.robotcore.exception.RobotCoreException;
 import com.qualcomm.robotcore.hardware.LynxModuleDescription;
 import com.qualcomm.robotcore.hardware.usb.RobotArmingStateNotifier;
-import com.qualcomm.hardware.lynx.LynxModule;
-import com.qualcomm.hardware.lynx.LynxNackException;
-import com.qualcomm.hardware.lynx.commands.LynxMessage;
-import com.qualcomm.hardware.lynx.commands.LynxRespondable;
-import com.qualcomm.hardware.lynx.commands.LynxCommand;
-import com.qualcomm.hardware.lynx.commands.core.LynxGetBulkInputDataCommand;
-import com.qualcomm.hardware.lynx.commands.core.LynxGetBulkInputDataResponse;
-
-import static com.qualcomm.hardware.lynx.commands.standard.LynxNack.StandardReasonCode;
-
+import java.util.function.DoubleSupplier;
+import java.util.regex.Pattern;
 import org.firstinspires.ftc.robotcore.external.navigation.VoltageUnit;
-
-import org.junit.jupiter.api.AssertionFailureBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.function.Executable;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
-
+import static clarson.ftc.faker.test.TestUtil.*;
+import static com.qualcomm.hardware.lynx.commands.standard.LynxNack.StandardReasonCode;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assumptions.*;
-
-import org.junit.jupiter.params.Parameter;
-import org.junit.jupiter.params.ParameterizedClass;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
-
-import java.util.regex.Pattern;
-import java.util.function.DoubleSupplier;
-import java.util.regex.Matcher;
-
-import static java.util.concurrent.TimeUnit.SECONDS;
 
 class LynxUsbDeviceImplFakeUnitTest {
     

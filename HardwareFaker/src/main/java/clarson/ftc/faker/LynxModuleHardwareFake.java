@@ -23,11 +23,9 @@
 package clarson.ftc.faker;
 
 import com.qualcomm.hardware.lynx.commands.core.LynxDekaInterfaceCommand;
-import com.qualcomm.hardware.lynx.commands.LynxCommand;
 import com.qualcomm.hardware.lynx.LynxModule;
-import com.qualcomm.robotcore.hardware.LynxModuleDescription;
 import com.qualcomm.robotcore.exception.RobotCoreException;
-
+import com.qualcomm.robotcore.hardware.LynxModuleDescription;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;

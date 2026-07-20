@@ -19,7 +19,6 @@
 package clarson.ftc.faker.util;
 
 import clarson.ftc.faker.updater.Updateable;
-
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 /**

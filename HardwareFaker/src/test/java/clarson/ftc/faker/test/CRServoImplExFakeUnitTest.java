@@ -18,30 +18,27 @@
 
 package clarson.ftc.faker.test;
 
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.CRServo;
-import com.qualcomm.robotcore.hardware.CRServoImplEx;
-import com.qualcomm.robotcore.hardware.PwmControl;
-import com.qualcomm.robotcore.util.Range;
 
-import org.junit.jupiter.api.AssertionFailureBuilder;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.function.Executable;
-import org.junit.jupiter.params.Parameter;
-import org.junit.jupiter.params.ParameterizedClass;
-import org.junit.jupiter.params.provider.ValueSource;
 
 import clarson.ftc.faker.CRServoImplExFake;
 import clarson.ftc.faker.ServoControllerExFake;
-
+import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.CRServoImplEx;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.PwmControl;
+import com.qualcomm.robotcore.util.Range;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.Parameter;
+import org.junit.jupiter.params.ParameterizedClass;
+import org.junit.jupiter.params.provider.ValueSource;
+import static clarson.ftc.faker.test.TestUtil.*;
 import static com.qualcomm.robotcore.hardware.PwmControl.PwmRange;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assumptions.*;
-import static clarson.ftc.faker.test.TestUtil.*;
 
 class CRServoImplExFakeUnitTest {
     @DisplayName("Can construct")

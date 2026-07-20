@@ -19,12 +19,11 @@
 package clarson.ftc.faker;
 
 import clarson.ftc.faker.LynxModuleHardwareFake;
-
-import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.hardware.lynx.commands.core.LynxGetADCCommand;
+import com.qualcomm.hardware.lynx.LynxModule;
+import com.qualcomm.robotcore.exception.RobotCoreException;
 import com.qualcomm.robotcore.hardware.AnalogInputController;
 import com.qualcomm.robotcore.util.SerialNumber;
-import com.qualcomm.robotcore.exception.RobotCoreException;
 
 public class AnalogInputControllerFake implements AnalogInputController {
     /**

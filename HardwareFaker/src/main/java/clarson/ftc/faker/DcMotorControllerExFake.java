@@ -19,26 +19,20 @@
 package clarson.ftc.faker;
 
 import clarson.ftc.faker.wrapper.MotorData;
-
-import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.hardware.lynx.commands.core.LynxGetBulkInputDataCommand;
 import com.qualcomm.hardware.lynx.commands.core.LynxGetMotorEncoderPositionCommand;
 import com.qualcomm.hardware.lynx.commands.core.LynxIsMotorAtTargetCommand;
+import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.exception.RobotCoreException;
+import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorImplEx;
 import com.qualcomm.robotcore.hardware.DcMotorControllerEx;
+import com.qualcomm.robotcore.hardware.DcMotorImplEx;
 import com.qualcomm.robotcore.hardware.PIDCoefficients;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
-import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
-
-import static com.qualcomm.robotcore.hardware.HardwareDevice.Manufacturer;
-
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
-
-import java.util.Map;
-import java.util.HashMap;
+import static com.qualcomm.robotcore.hardware.HardwareDevice.Manufacturer;
 
 public class DcMotorControllerExFake implements DcMotorControllerEx {
     /**

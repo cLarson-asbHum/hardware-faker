@@ -18,53 +18,32 @@
 
 package clarson.ftc.faker.test;
 
-
 import clarson.ftc.faker.DigitalChannelControllerFake;
 import clarson.ftc.faker.DigitalChannelImplFake;
+import clarson.ftc.faker.function.TimedStateGetter;
 import clarson.ftc.faker.LynxModuleHardwareFake;
 import clarson.ftc.faker.LynxUsbDeviceImplFake;
-import clarson.ftc.faker.function.TimedStateGetter;
 import clarson.ftc.faker.updater.ModularUpdater;
-import clarson.ftc.faker.updater.Updateable;
 import clarson.ftc.faker.updater.Updater;
 import clarson.ftc.faker.util.AbstractTwoWayUpdateable;
 import clarson.ftc.faker.util.EasyTimedStateGetter;
-import clarson.ftc.faker.util.UpdateableSupplier;
 import clarson.ftc.faker.wrapper.DigitalChannelData;
-
-import static clarson.ftc.faker.test.TestUtil.*;
-
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.exception.RobotCoreException;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.LynxModuleDescription;
-
-import org.junit.jupiter.api.AssertionFailureBuilder;
+import java.util.function.BooleanSupplier;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.function.Executable;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Timeout;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assumptions.*;
-
-import java.util.Collection;
-import java.util.Set;
-import java.util.function.BooleanSupplier;
-
 import org.junit.jupiter.params.Parameter;
 import org.junit.jupiter.params.ParameterizedClass;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.junit.jupiter.params.provider.EnumSource;
-
-import static java.util.concurrent.TimeUnit.SECONDS;
+import org.junit.jupiter.params.provider.ValueSource;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assumptions.*;
 
 class DigitalChannelImplFakeUnitTest {
     @DisplayName("Can Construct")

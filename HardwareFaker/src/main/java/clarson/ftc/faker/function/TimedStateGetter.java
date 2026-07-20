@@ -19,7 +19,6 @@
 package clarson.ftc.faker.function;
 
 import clarson.ftc.faker.updater.Updateable;
-
 import java.util.function.BooleanSupplier;
 
 public interface TimedStateGetter extends BooleanSupplier, Updateable {

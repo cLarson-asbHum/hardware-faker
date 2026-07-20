@@ -18,31 +18,15 @@
 
 package clarson.ftc.faker.test.util;
 
-import clarson.ftc.faker.util.EasyTimedDistanceGetter;
 import clarson.ftc.faker.function.DistanceGetter;
 import clarson.ftc.faker.function.TimedDistanceGetter;
-
-import static clarson.ftc.faker.test.TestUtil.*;
-
+import clarson.ftc.faker.util.EasyTimedDistanceGetter;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-
-import org.junit.jupiter.api.AssertionFailureBuilder;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.function.Executable;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Timeout;
-
+import static clarson.ftc.faker.test.TestUtil.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assumptions.*;
-
-import org.junit.jupiter.params.Parameter;
-import org.junit.jupiter.params.ParameterizedClass;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
-import org.junit.jupiter.params.provider.EnumSource;
 
 class EasyTimedDistanceGetterUnitTest {
     @DisplayName("Can Construct")

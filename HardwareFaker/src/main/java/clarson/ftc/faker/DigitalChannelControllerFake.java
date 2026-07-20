@@ -19,9 +19,8 @@
 package clarson.ftc.faker;
 
 import clarson.ftc.faker.wrapper.DigitalChannelData;
-
-import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.hardware.lynx.commands.core.LynxGetSingleDIOInputCommand;
+import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.exception.RobotCoreException;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.DigitalChannelController;
@@ -43,7 +42,7 @@ public class DigitalChannelControllerFake implements DigitalChannelController {
     }
 
     private DigitalChannelData[] channels = new DigitalChannelData[this.totalPorts()];
-    private SerialNumber serialNumber = SerialNumber.createEmbedded();
+    private final SerialNumber serialNumber = SerialNumber.createEmbedded();
     private boolean shouldReread = false;
     private LynxModuleHardwareFake module = null;
 

@@ -24,53 +24,39 @@ package clarson.ftc.faker;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-
 import clarson.ftc.faker.util.UnsupportedLynxUsbCommandException;
-
-import com.qualcomm.robotcore.hardware.configuration.LynxConstants;
-import com.qualcomm.hardware.lynx.commands.LynxRespondable;
-import com.qualcomm.hardware.lynx.commands.LynxMessage;
-import com.qualcomm.hardware.lynx.commands.LynxCommand;
-import com.qualcomm.hardware.lynx.commands.core.LynxGetADCCommand;
 import com.qualcomm.hardware.lynx.commands.core.LynxGetBulkInputDataCommand;
 import com.qualcomm.hardware.lynx.commands.core.LynxGetBulkInputDataResponse;
 import com.qualcomm.hardware.lynx.commands.core.LynxGetMotorEncoderPositionCommand;
 import com.qualcomm.hardware.lynx.commands.core.LynxGetMotorEncoderPositionResponse;
 import com.qualcomm.hardware.lynx.commands.core.LynxIsMotorAtTargetCommand;
 import com.qualcomm.hardware.lynx.commands.core.LynxIsMotorAtTargetResponse;
+import com.qualcomm.hardware.lynx.commands.LynxMessage;
+import com.qualcomm.hardware.lynx.commands.LynxRespondable;
+import com.qualcomm.hardware.lynx.commands.standard.LynxAck;
 import com.qualcomm.hardware.lynx.commands.standard.LynxKeepAliveCommand;
-import com.qualcomm.hardware.lynx.commands.standard.LynxStandardCommand;
+import com.qualcomm.hardware.lynx.commands.standard.LynxNack;
 import com.qualcomm.hardware.lynx.commands.standard.LynxQueryInterfaceCommand;
 import com.qualcomm.hardware.lynx.commands.standard.LynxQueryInterfaceResponse;
+import com.qualcomm.hardware.lynx.commands.standard.LynxStandardCommand;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.hardware.lynx.LynxModuleIntf;
-import com.qualcomm.hardware.lynx.commands.standard.LynxAck;
-import com.qualcomm.hardware.lynx.commands.standard.LynxNack;
 import com.qualcomm.hardware.lynx.LynxUsbDevice;
 import com.qualcomm.hardware.lynx.LynxUsbDeviceImpl;
 import com.qualcomm.robotcore.exception.RobotCoreException;
-import com.qualcomm.robotcore.hardware.LynxModuleDescription;
-import com.qualcomm.robotcore.hardware.LynxModuleMetaList;
-import com.qualcomm.robotcore.hardware.usb.RobotUsbManager;
-import com.qualcomm.robotcore.hardware.usb.RobotUsbDevice;
-import com.qualcomm.robotcore.hardware.usb.RobotUsbModule;
-import com.qualcomm.robotcore.util.SerialNumber;
+import com.qualcomm.robotcore.hardware.configuration.LynxConstants;
 import com.qualcomm.robotcore.hardware.DeviceManager;
-
-import java.util.concurrent.TimeoutException;
+import com.qualcomm.robotcore.hardware.LynxModuleDescription;
+import com.qualcomm.robotcore.hardware.usb.RobotUsbDevice;
+import com.qualcomm.robotcore.hardware.usb.RobotUsbManager;
+import com.qualcomm.robotcore.util.SerialNumber;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
-import java.util.concurrent.TimeUnit;
-
 import org.firstinspires.ftc.robotcore.external.navigation.VoltageUnit;
-import org.firstinspires.ftc.robotcore.internal.network.RobotCoreCommandList;
-import org.firstinspires.ftc.robotcore.internal.ui.ProgressParameters;
-import org.firstinspires.ftc.robotcore.internal.usb.exception.RobotUsbException;
 import org.firstinspires.ftc.robotcore.internal.hardware.TimeWindow;
 import org.firstinspires.ftc.robotcore.internal.system.Assert;
+import org.firstinspires.ftc.robotcore.internal.usb.exception.RobotUsbException;
 
 public class LynxUsbDeviceImplFake extends LynxUsbDeviceImpl {
     public static final String UNRESPONDABLE_MSG = "LynxMessage %s could not receive its response.";

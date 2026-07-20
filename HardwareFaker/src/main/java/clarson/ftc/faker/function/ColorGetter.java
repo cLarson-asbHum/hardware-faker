@@ -18,10 +18,8 @@
 
 package clarson.ftc.faker.function;
 
-import java.util.function.IntSupplier;
-
 import androidx.annotation.ColorInt;
-
+import java.util.function.IntSupplier;
 
 @FunctionalInterface
 public interface ColorGetter extends IntSupplier {

@@ -19,15 +19,12 @@
 package clarson.ftc.faker.util;
 
 import androidx.annotation.ColorInt;
-
 import clarson.ftc.faker.function.ColorGetter;
 import clarson.ftc.faker.function.ColorRangeGetter;
 import clarson.ftc.faker.function.DistanceGetter;
-
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.IntSupplier;
-
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 /**

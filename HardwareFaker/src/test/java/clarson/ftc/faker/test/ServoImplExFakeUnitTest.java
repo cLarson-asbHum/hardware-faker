@@ -18,37 +18,23 @@
 
 package clarson.ftc.faker.test;
 
+import clarson.ftc.faker.ServoImplExFake;
+import clarson.ftc.faker.wrapper.PositionalServoData;
+import com.qualcomm.robotcore.hardware.PwmControl;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.ServoImplEx;
-import com.qualcomm.robotcore.hardware.PwmControl;
 import com.qualcomm.robotcore.util.Range;
-
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Disabled;
-
-import org.junit.jupiter.api.AssertionFailureBuilder;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.function.Executable;
-
-import org.junit.jupiter.params.ParameterizedClass;
-import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.Parameter;
+import org.junit.jupiter.params.ParameterizedClass;
 import org.junit.jupiter.params.provider.ValueSource;
-
-import clarson.ftc.faker.ServoImplExFake;
-import clarson.ftc.faker.ServoControllerExFake;
-import clarson.ftc.faker.wrapper.PositionalServoData;
-
+import static clarson.ftc.faker.test.TestUtil.*;
 import static com.qualcomm.robotcore.hardware.PwmControl.PwmRange;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assumptions.*;
-import static clarson.ftc.faker.test.TestUtil.*;
 
 public class ServoImplExFakeUnitTest {
     @DisplayName("Can construct")
@@ -68,9 +54,6 @@ public class ServoImplExFakeUnitTest {
         assertDoesNotThrow(() -> new ServoImplExFake(312, 1, 1200, new PwmRange(0, 100, 40)));
         assertDoesNotThrow(() -> new ServoImplExFake(-312, 5, -1200, new PwmRange(100, 98300)));
         assertDoesNotThrow(() -> new ServoImplExFake(312, 1, -1200, new PwmRange(1000, 98300, 40)));
-
-        // TODO: Pimp out the Can construct tests of all hardware thus far. 
-        //       Use controllers and wrapper data!
     }
 
     

@@ -19,19 +19,7 @@
 package clarson.ftc.faker.factory;
 
 // TODO: Add more hardware!
-import clarson.ftc.faker.AnalogInputControllerFake;
-import clarson.ftc.faker.AnalogInputFake;
-import clarson.ftc.faker.CRServoImplExFake;
-import clarson.ftc.faker.DcMotorControllerExFake;
-import clarson.ftc.faker.DcMotorImplExFake;
-import clarson.ftc.faker.DigitalChannelControllerFake;
-import clarson.ftc.faker.DigitalChannelImplFake;
-import clarson.ftc.faker.DistanceSensorFake;
-import clarson.ftc.faker.LEDFake;
-import clarson.ftc.faker.LynxModuleHardwareFake;
-import clarson.ftc.faker.LynxUsbDeviceImplFake;
-import clarson.ftc.faker.ServoControllerExFake;
-import clarson.ftc.faker.ServoImplExFake;
+import clarson.ftc.faker.*;
 import clarson.ftc.faker.updater.ModularUpdater;
 import clarson.ftc.faker.wrapper.ContinuousServoData;
 import clarson.ftc.faker.wrapper.DigitalChannelData;
@@ -47,9 +35,8 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.concurrent.LinkedBlockingDeque;
-import java.util.Deque;
 import java.util.Map;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
@@ -143,7 +130,6 @@ public class XmlHardwareFakeFactory {
 
     );
     
-    private int lastLynxAddress = -1;
     private int parentAddress = -1;
     private SAXParserFactory inputFactory;
     private Exception bubbledException = null;
@@ -161,7 +147,6 @@ public class XmlHardwareFakeFactory {
         final HardwareMap result = new HardwareMap(null, null); // Yes, the OpModeNotifier *shouldn't* be null, but it doesn't matter
 
         parentAddress = -1;
-        lastLynxAddress = -1;
         reader.parse(xmlStream, new ConfigHandler(result));
 
         // Throwing any exception that was supposed to have been thrown
@@ -181,7 +166,7 @@ public class XmlHardwareFakeFactory {
         String uri, 
         Attributes attr, 
         HardwareMap map, 
-        Deque<HardwareDevice> hierarchy
+        HardwareStack stack
     ) throws  MissingRequiredAttributeException, InterruptedException, RobotCoreException {
         // Getting the current tag
         HardwareType type;
@@ -192,7 +177,7 @@ public class XmlHardwareFakeFactory {
         }
 
         // Adding the hardware based off the tag.
-        final HardwareDevice result = createDevice(type, uri, attr, hierarchy);
+        final HardwareDevice result = createDevice(type, uri, attr, stack);
         throwIfDoesNotContain(attr, new String[]{ "name" });
         map.put(attr.getValue(uri, "name"), result);
         return result;
@@ -202,7 +187,7 @@ public class XmlHardwareFakeFactory {
         HardwareType type,
         String uri,
         Attributes attributes,
-        Deque<HardwareDevice> hierarchy
+        HardwareStack stack
     ) throws  MissingRequiredAttributeException, 
             InterruptedException, RobotCoreException
     {
@@ -216,14 +201,14 @@ public class XmlHardwareFakeFactory {
                         type.getDouble("pwmMin", attributes, uri), 
                         type.getDouble("pwmMin", attributes, uri)
                     )
-                ), findServoController(hierarchy), type.getInt("port", attributes, uri));
+                ), stack.findServoController(), type.getInt("port", attributes, uri));
             }
 
             case LYNX_MODULE: {
                 // final String[] attr = allNonNull(queryAttributeValues(parser, type.attributes));
                 throwIfDoesNotContain(attributes, type.attributes);
                 final int port = type.getInt("port", attributes, uri);
-                final LynxUsbDeviceImplFake usbDevice = findLynxUsbDevice(hierarchy);
+                final LynxUsbDeviceImplFake usbDevice = stack.findLynxUsbDevice();
                 return usbDevice.getOrAddModule(
                     new LynxModuleDescription.Builder(port, port == parentAddress)
                         .setUserModule()
@@ -246,11 +231,11 @@ public class XmlHardwareFakeFactory {
                     type.getDouble("rpm", attributes, uri), 
                     0, 
                     type.getDouble("ticksPerRev", attributes, uri)
-                ), findDcMotorController(hierarchy), type.getInt("port", attributes, uri));
+                ), stack.findDcMotorController(), type.getInt("port", attributes, uri));
             }
 
             case MOTOR_CONTROLLER: 
-                return new DcMotorControllerExFake(findLynxModule(hierarchy));
+                return new DcMotorControllerExFake(stack.findLynxModule());
 
             case SERVO: { 
                 // final String[] attr = allNonNull(queryAttributeValues(parser, type.attributes));
@@ -263,7 +248,7 @@ public class XmlHardwareFakeFactory {
                         type.getDouble("pwmMin", attributes, uri), 
                         type.getDouble("pwmMin", attributes, uri)
                     )
-                ), findServoController(hierarchy), type.getInt("port", attributes, uri));
+                ), stack.findServoController(), type.getInt("port", attributes, uri));
             }
 
             case SERVO_CONTROLLER: 
@@ -276,66 +261,12 @@ public class XmlHardwareFakeFactory {
         }
     }
 
-    /**
-     * Finds the last DcMotorControllerExFake in the hierarchy. If none is 
-     * found, creates a new one.
-     * 
-     * This operators on last-in, first-out; the HardwareDevice added last will
-     * be the one found by this method.
-     * 
-     * @param hierarchy The order of elements the parser is nested in.
-     * @return The last added DcMotorController ()
-     */
-    private DcMotorControllerExFake findDcMotorController(Deque<HardwareDevice> hierarchy) {
-        for(final HardwareDevice superDevice : hierarchy) {
-            if(superDevice instanceof DcMotorControllerExFake) {
-                return (DcMotorControllerExFake) superDevice;
-            }
-        }
-
-        // Creating a new DcMotorController
-        return new DcMotorControllerExFake(findLynxModule(hierarchy));
-    }
-
-    private ServoControllerExFake findServoController(Deque<HardwareDevice> hierarchy) {
-        for(final HardwareDevice superDevice : hierarchy) {
-            if(superDevice instanceof ServoControllerExFake) {
-                return (ServoControllerExFake) superDevice;
-            }
-        }
-
-        // Creating a new DcMotorController
-        return new ServoControllerExFake();
-    }
-
-    private LynxModuleHardwareFake findLynxModule(Deque<HardwareDevice> hierarchy) {
-        for(final HardwareDevice superDevice : hierarchy) {
-            if(superDevice instanceof LynxModuleHardwareFake) {
-                return (LynxModuleHardwareFake) superDevice;
-            }
-        }
-
-        // Creating a new DcMotorController
-        return new LynxModuleHardwareFake(findLynxUsbDevice(hierarchy), lastLynxAddress--, false, true);
-
-    }
-
-    private LynxUsbDeviceImplFake findLynxUsbDevice(Deque<HardwareDevice> hierarchy) {
-        for(final HardwareDevice superDevice : hierarchy) {
-            if(superDevice instanceof LynxUsbDeviceImplFake) {
-                return (LynxUsbDeviceImplFake) superDevice;
-            }
-        }
-
-        // Creating a new DcMotorController
-        return new LynxUsbDeviceImplFake();
-    }
-
     private class ConfigHandler extends DefaultHandler {
-        private final Deque<HardwareDevice> hierarchy = new LinkedBlockingDeque<>();
+        private final HardwareStack stack = new HardwareStack();
         private final HardwareMap result;
-        private DcMotorImplExFake[] motors = new DcMotorImplExFake[0];
-        // TODO: Add didigtal and analog inputs.
+        private ArrayList<DcMotorImplExFake>      motors   = new ArrayList<>();
+        private ArrayList<DigitalChannelImplFake> digitals = new ArrayList<>();
+        private ArrayList<AnalogInputFake>        analogs  = new ArrayList<>();
 
         public ConfigHandler(HardwareMap result) {
             this.result = result;
@@ -345,13 +276,24 @@ public class XmlHardwareFakeFactory {
         public void startElement(String uri, String name, String unused, Attributes attr) {
             // Adding the current tag to the stack
             try {
-                final HardwareDevice device = addHardwareFromCurrentTag(name, uri, attr, result, hierarchy);
-                hierarchy.addFirst(device);
+                final HardwareDevice device = addHardwareFromCurrentTag(name, uri, attr, result, stack);
+                stack.push(device);
                 if(device instanceof DcMotorImplExFake) {
-                    motors = Arrays.copyOf(motors, motors.length + 1);
-                    motors[motors.length - 1] = (DcMotorImplExFake) device;
-                    findLynxUsbDevice(hierarchy).setMotors(motors); // FIXME: Horrible performance? O(3n^2)?
-                } /* else if(device instanceof AnalogInput) {} // TODO: add digital and analog devices */
+                    motors.add((DcMotorImplExFake) device);
+                    stack
+                        .findLynxUsbDevice()
+                        .setMotors(motors.toArray(new DcMotorImplExFake[0]));
+                } else if(device instanceof DigitalChannelImplFake) {
+                    digitals.add((DigitalChannelImplFake) device);
+                    stack
+                        .findLynxUsbDevice()
+                        .setDigitalChannels(digitals.toArray(new DigitalChannelImplFake[0]));
+                } else if(device instanceof AnalogInputFake) {
+                    analogs.add((AnalogInputFake) device);
+                    stack
+                        .findLynxUsbDevice()
+                        .setAnalogInputs(analogs.toArray(new AnalogInputFake[0]));
+                }
             } catch (Exception exc) {
                 bubbledException = exc;
             }
@@ -359,8 +301,8 @@ public class XmlHardwareFakeFactory {
 
         @Override
         public void endElement(String uri, String name, String unused) {
-            // Removing from hierarchy
-            hierarchy.removeFirst();
+            // Removing from stack
+            stack.pop();
         }
     }
 

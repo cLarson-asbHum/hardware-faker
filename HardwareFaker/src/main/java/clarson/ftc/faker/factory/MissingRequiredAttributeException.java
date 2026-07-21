@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package clarson.ftc.faker.util;
+package clarson.ftc.faker.factory;
 
 public class MissingRequiredAttributeException extends Exception {
     MissingRequiredAttributeException(String message) {

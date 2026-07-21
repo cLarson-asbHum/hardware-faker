@@ -16,55 +16,49 @@
  * limitations under the License.
  */
 
-package clarson.ftc.faker.util;
+package clarson.ftc.faker.factory;
 
 // TODO: Add more hardware!
-// import clarson.ftc.faker.AnalogInputContollerFake;
-// import clarson.ftc.faker.AnalogInputFake;
+import clarson.ftc.faker.AnalogInputControllerFake;
+import clarson.ftc.faker.AnalogInputFake;
 import clarson.ftc.faker.CRServoImplExFake;
 import clarson.ftc.faker.DcMotorControllerExFake;
 import clarson.ftc.faker.DcMotorImplExFake;
-// import clarson.ftc.faker.DigitalChannelControllerFake;
-// import clarson.ftc.faker.DigitalChannelFake;
+import clarson.ftc.faker.DigitalChannelControllerFake;
+import clarson.ftc.faker.DigitalChannelImplFake;
+import clarson.ftc.faker.DistanceSensorFake;
+import clarson.ftc.faker.LEDFake;
 import clarson.ftc.faker.LynxModuleHardwareFake;
 import clarson.ftc.faker.LynxUsbDeviceImplFake;
 import clarson.ftc.faker.ServoControllerExFake;
 import clarson.ftc.faker.ServoImplExFake;
 import clarson.ftc.faker.updater.ModularUpdater;
 import clarson.ftc.faker.wrapper.ContinuousServoData;
+import clarson.ftc.faker.wrapper.DigitalChannelData;
 import clarson.ftc.faker.wrapper.MotorData;
 import clarson.ftc.faker.wrapper.PositionalServoData;
-
 import com.qualcomm.robotcore.exception.RobotCoreException;
 import com.qualcomm.robotcore.hardware.HardwareDevice;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.LynxModuleDescription;
-
-import static com.qualcomm.robotcore.hardware.PwmControl.PwmRange;
-
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileReader;
 import java.io.InputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.concurrent.LinkedBlockingDeque;
 import java.util.Deque;
 import java.util.Map;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.concurrent.LinkedBlockingDeque;
-
-import static java.util.Map.entry;    
-
-import org.xml.sax.Attributes;
-import org.xml.sax.SAXException;
-
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
+import org.xml.sax.Attributes;
 import org.xml.sax.helpers.DefaultHandler;
+import org.xml.sax.SAXException;
+import static com.qualcomm.robotcore.hardware.PwmControl.PwmRange;
+import static java.util.Map.entry;    
 
 public class XmlHardwareFakeFactory {
     public static enum HardwareType {

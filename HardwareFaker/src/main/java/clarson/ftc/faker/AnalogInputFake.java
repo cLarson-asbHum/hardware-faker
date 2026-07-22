@@ -106,6 +106,10 @@ public class AnalogInputFake extends AnalogInput implements TwoWayUpdateable {
         return this.controller;
     }
 
+    public int getPortNumber() {
+        return this.port;
+    }
+
     @Override
     public String getDeviceName() {
         return "AnalogInputFake";

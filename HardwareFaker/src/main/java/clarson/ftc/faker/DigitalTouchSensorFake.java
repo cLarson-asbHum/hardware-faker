@@ -18,11 +18,13 @@
 package clarson.ftc.faker;
 
 import clarson.ftc.faker.function.TimedStateGetter;
+import clarson.ftc.faker.updater.ModularUpdater;
 import clarson.ftc.faker.updater.SimulateDelay;
 import clarson.ftc.faker.updater.TwoWayUpdateable;
 import clarson.ftc.faker.updater.Updater;
 import clarson.ftc.faker.util.EasyTimedStateGetter;
 import clarson.ftc.faker.wrapper.DigitalChannelData;
+import com.qualcomm.hardware.lynx.commands.core.LynxGetSingleDIOInputCommand;
 import com.qualcomm.robotcore.hardware.TouchSensor;
 import java.util.function.BooleanSupplier;
 import java.util.HashSet;
@@ -71,6 +73,7 @@ public class DigitalTouchSensorFake implements TouchSensor, TwoWayUpdateable {
         
     }
 
+    private final HashSet<Updater> updaters = new HashSet<>();
     private final DigitalChannelImplFake underlyingChannel;
 
     /**
@@ -176,6 +179,18 @@ public class DigitalTouchSensorFake implements TouchSensor, TwoWayUpdateable {
         underlyingChannel = new DigitalChannelImplFake(data, controller);
     }
 
+    public DigitalChannelImplFake asDigitalChannel() {
+        return this.underlyingChannel;
+    }
+
+    public DigitalChannelControllerFake getControllerFake() {
+        return asDigitalChannel().getController();
+    }
+
+    public int getPortNumber() {
+        return asDigitalChannel().getPortNumber();
+    }
+
     /**
      * Returns the logical opposite of the underlying controller's state. This
      * is based off of REV touch sensors, which pull LOW when they are pressed.
@@ -189,10 +204,37 @@ public class DigitalTouchSensorFake implements TouchSensor, TwoWayUpdateable {
     @SimulateDelay(ON_BULK_READS)
     @Override
     public boolean isPressed() {
-        // This makes the most sense to return true when the digital state is LOW (aka. false).
-        //   > "Any touch sensor that connects its output to ground when pressed
-        //   >  (known as "active low") can be configured as a 'REV Touch Sensor.' "
-        // (Source: SensorTouch.java in the samples folder of the official FtcRobotController project)
+        // NOTE: underlyingChannel does not simulate delay, because it isn't registered with any updaters
+
+        // Simulating delay only if this method was called by the user, not by any 
+        // internal methods. This is done to prevent Updater.updateAll() from being 
+        // called multiple times by LynxModuleUsbDeviceImplFake.readBulkDataPayload()
+        // FIXME: Every Bulk-read hardware needs this condition!! Add a corresponding test for each one
+        if(getControllerFake().shouldReread()) {
+            return !underlyingChannel.getState();    
+        }
+
+        // The method was called by a user rather than an internal method; 
+        // simulate delay.
+        final LynxGetSingleDIOInputCommand command = new LynxGetSingleDIOInputCommand(
+            getControllerFake().getLynxModule(),
+            this.getPortNumber()
+        );
+
+        ModularUpdater.updateAllOnceIfAnyCacheOutdated(
+            updaters, 
+            Updater.UpdateDelaySource.DIGITAL, 
+            this, 
+            command
+        );
+        
+        /* 
+         *  It makes the most sense to return true when the digital state is LOW (aka. false).
+         *  > "Any touch sensor that connects its output to ground when pressed
+         *  >  (known as "active low") can be configured as a 'REV Touch Sensor.' "
+         *  (Source: SensorTouch.java in the samples folder of the official FtcRobotController project) 
+         */
+        underlyingChannel.setMode(DigitalChannelImplFake.Mode.INPUT);
         return !underlyingChannel.getState();
     }
 
@@ -209,12 +251,12 @@ public class DigitalTouchSensorFake implements TouchSensor, TwoWayUpdateable {
 
     @Override
     public void remember(Updater updater) {
-        underlyingChannel.remember(updater);
+        updaters.add(updater);
     }
 
     @Override
     public void forget(Updater updater) {
-        underlyingChannel.forget(updater);
+        updaters.remove(updater);
     }
 
     @Override

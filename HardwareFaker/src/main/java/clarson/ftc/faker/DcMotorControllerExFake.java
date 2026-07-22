@@ -235,12 +235,6 @@ public class DcMotorControllerExFake implements DcMotorControllerEx {
             return data.getMotorVelocity(port);
         }
 
-        // TODO: I don't think this check is necessary nor accurate
-        // if(!getData(port).isEnabled) {
-        //     // When not enabled, the motor does not give or take any data.
-        //     return 0;
-        // }
-
         return getData(port).getActualVelocity();
     }
 
@@ -286,7 +280,6 @@ public class DcMotorControllerExFake implements DcMotorControllerEx {
 
     @Override
     public double getMotorCurrent(int port, CurrentUnit unit) {
-        // TODO: Make this calculate current drawn based off of velocity and added angular?
         // Just pretending that resistance doesn't matter (it doesn't, so touch 
         // exposed wires, kids!) and so current = voltage
         return unit.convert(Math.abs(13 * getData(port).power), CurrentUnit.AMPS);
@@ -321,8 +314,6 @@ public class DcMotorControllerExFake implements DcMotorControllerEx {
     @Override
     public void setMotorType(int port, MotorConfigurationType motorType) {
         if(isPortAvailable(port)) {
-            // FIXME: This is the only method that is this graceful, but we need it to be
-            //        DcMotorImplEx calls this method before we can connect anything, soooo... 
             return;
         }
 
@@ -458,17 +449,11 @@ public class DcMotorControllerExFake implements DcMotorControllerEx {
 
     @Override
     public String getConnectionInfo() {
-        return String.format(
-              "DcMotorControllerExFake Connections:" +
-            "\n    [1]: %s" +  
-            "\n    [2]: %s" +  
-            "\n    [3]: %s" +  
-            "\n    [4]: %s",
-            safeGetDeviceName(getMotor(0)),
-            safeGetDeviceName(getMotor(1)),
-            safeGetDeviceName(getMotor(2)),
-            safeGetDeviceName(getMotor(3))
-        );
+        String result = "DcMotorControllerExFake Connections:";
+        for(int i = 0; i < this.totalPorts(); i++) {
+            result += String.format("\n    [%d]: %s", i, safeGetDeviceName(motors[i].actuator));
+        }
+        return result;
     }
 
     @Override

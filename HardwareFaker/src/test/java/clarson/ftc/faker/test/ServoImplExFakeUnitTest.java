@@ -83,7 +83,6 @@ public class ServoImplExFakeUnitTest {
 
         @BeforeEach
         void constructServo() {
-            // TODO: ParameterizeClass for the construtor variants?
             servo = new ServoImplExFake(rpm, turns, 0, maxPwm);
             servo.setPwmRange(maxPwm);
 

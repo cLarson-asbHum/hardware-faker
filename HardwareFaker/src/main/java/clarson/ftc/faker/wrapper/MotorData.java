@@ -91,7 +91,6 @@ public class MotorData implements Rotateable, Updateable {
     } 
     
     public MotorData(DcMotorImplEx actuator, double rpm, double ticksPerRev, double initialPosition) {
-        // TODO: This should register the motor so that it can be updated and affected
         this.actuator = actuator;
         this.ticksPerRev = ticksPerRev;
         this.maxTicksPerSec = ticksPerRev * rpm / 60;

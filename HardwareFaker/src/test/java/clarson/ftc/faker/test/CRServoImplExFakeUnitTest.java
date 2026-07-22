@@ -57,8 +57,6 @@ class CRServoImplExFakeUnitTest {
         assertDoesNotThrow(() -> new CRServoImplExFake(312, 1200, new PwmRange(0, 100, 40)));
         assertDoesNotThrow(() -> new CRServoImplExFake(-312, -1200, new PwmRange(100, 98300)));
         assertDoesNotThrow(() -> new CRServoImplExFake(312, -1200, new PwmRange(1000, 98300, 40)));
-
-        // TODO: test the other implementations!
     }
 
     @DisplayName("Initial settings are FORWARD, enabled, and power 0")

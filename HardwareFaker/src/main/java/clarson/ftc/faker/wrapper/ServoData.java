@@ -68,7 +68,6 @@ abstract public class ServoData<T extends HardwareDevice> implements Rotateable,
     } 
     
     public ServoData(T actuator, double rpm, double initialPosition, PwmRange maxPwm) {
-        // TODO: This should register the servo so that it can be updated and affected
         this.actuator = actuator;
         this.maxRevsPerSec = rpm / 60;
         this.position = initialPosition;

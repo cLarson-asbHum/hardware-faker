@@ -42,14 +42,14 @@ public class CRServoImplExFake extends CRServoImplEx implements Rotateable, TwoW
      * Finds the lowest valued, unnoccupied port on the controller. If none are
      * found, -1 is returned.
      * 
-     * @return The lowest avaiable port, or -1 if none exists.
+     * @return The lowest available port, or -1 if none exists.
      */
-    private static int findAvaiablePort(ServoControllerExFake controller) {
-        for(int i = 0; i < 4; i++) {
+    private static int findAvailablePort(ServoControllerExFake controller) {
+        for(int i = 0; i < controller.totalPorts(); i++) {
             controller.isPortAvailable(i);
         }
 
-        // The method would've early returned if any was avaiable
+        // The method would've early returned if any was available
         return -1;
     }
 
@@ -80,14 +80,14 @@ public class CRServoImplExFake extends CRServoImplEx implements Rotateable, TwoW
         );
 
         if(!controller.connect(ContinuousServoData.copyForServo(this, data))) {
-            throw new IllegalArgumentException("Port number <" + portNumber + "> is not avaiable on controller");
+            throw new IllegalArgumentException("Port number <" + portNumber + "> is not available on controller");
         }
 
         controller.setServoType(portNumber, getFakeConfiguration(data));
     }
 
     public CRServoImplExFake(ContinuousServoData data, ServoControllerExFake controller) {
-        this(data, controller, findAvaiablePort(controller));
+        this(data, controller, findAvailablePort(controller));
     }
 
     @Override

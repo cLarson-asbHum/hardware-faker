@@ -185,21 +185,11 @@ public class AnalogInputControllerFake implements AnalogInputController {
 
     @Override
     public String getConnectionInfo() {
-        return String.format(
-              "AnalogInputControllerFake Connections:" +
-            "\n    [0]: %s" +  
-            "\n    [1]: %s" +  
-            "\n    [2]: %s" +  
-            "\n    [3]: %s" +  
-            "\n    [4]: %s" +  
-            "\n    [5]: %s",
-            safeGetDeviceName(analogs[0]),
-            safeGetDeviceName(analogs[1]),
-            safeGetDeviceName(analogs[2]),
-            safeGetDeviceName(analogs[3]),
-            safeGetDeviceName(analogs[4]),
-            safeGetDeviceName(analogs[5])
-        );
+        String result = "AnalogInputControllerFake Connections:";
+        for(int i = 0; i < this.totalPorts(); i++) {
+            result += String.format("\n    [%d]: %s", i, safeGetDeviceName(analogs[i]));
+        }
+        return result;
     }
 
     private String safeGetDeviceName(AnalogInputFake analog) {

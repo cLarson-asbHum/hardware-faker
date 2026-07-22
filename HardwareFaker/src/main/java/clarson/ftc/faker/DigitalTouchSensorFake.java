@@ -209,7 +209,6 @@ public class DigitalTouchSensorFake implements TouchSensor, TwoWayUpdateable {
         // Simulating delay only if this method was called by the user, not by any 
         // internal methods. This is done to prevent Updater.updateAll() from being 
         // called multiple times by LynxModuleUsbDeviceImplFake.readBulkDataPayload()
-        // FIXME: Every Bulk-read hardware needs this condition!! Add a corresponding test for each one
         if(getControllerFake().shouldReread()) {
             return !underlyingChannel.getState();    
         }

@@ -313,14 +313,6 @@ public class LynxUsbDeviceImplFake extends LynxUsbDeviceImpl {
             channel.getController().setForceReread(false);
         }
 
-        
-        //#region DEV START: Logging the payload
-        // for(int i = 0; i < payload.length; i++) {
-        //     System.out.println("    [read bulk payload] byte: " + payload[i]);
-        // }
-        
-        //#endregion DEV END
-
         return payload;
     }
 

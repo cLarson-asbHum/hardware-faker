@@ -43,16 +43,16 @@ public class AnalogInputFake extends AnalogInput implements TwoWayUpdateable {
      * Finds the lowest valued, unnoccupied port on the controller. If none are
      * found, -1 is returned.
      * 
-     * @return The lowest avaiable port, or -1 if none exists.
+     * @return The lowest available port, or -1 if none exists.
      */
-    private static int findAvaiablePort(AnalogInputControllerFake controller) {
+    private static int findAvailablePort(AnalogInputControllerFake controller) {
         for(int i = 0; i < controller.totalPorts(); i++) {
             if(controller.isPortAvailable(i)) {
                 return i;
             }
         }
 
-        // The method would've early returned if any was avaiable
+        // The method would've early returned if any was available
         return -1;
     }
 
@@ -99,7 +99,7 @@ public class AnalogInputFake extends AnalogInput implements TwoWayUpdateable {
     }
 
     public AnalogInputFake(TimedVoltageGetter voltageGetter, AnalogInputControllerFake controller) {
-        this(voltageGetter, controller, findAvaiablePort(controller));
+        this(voltageGetter, controller, findAvailablePort(controller));
     }
     
     public AnalogInputControllerFake getControllerFake() {

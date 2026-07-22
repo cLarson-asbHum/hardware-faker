@@ -1124,7 +1124,7 @@ class ModularUpdaterUnitTest {
 
                 }
             
-                // TODO: If any other Updater classes are added, these 5 tests should be replicated
+                // NOTE: If any other Updater classes are added, these 5 tests should be replicated
                 @DisplayName("Updater.updateAllOnce traverses all given ModularUpdaters")
                 @Test
                 void traversesAllGivenUpdaters() {

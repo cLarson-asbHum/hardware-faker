@@ -19,13 +19,17 @@ package clarson.ftc.faker;
 
 import clarson.ftc.faker.function.TimedDoubleSupplier;
 import clarson.ftc.faker.function.TimedVoltageGetter;
+import clarson.ftc.faker.updater.ModularUpdater;
 import clarson.ftc.faker.updater.SimulateDelay;
 import clarson.ftc.faker.updater.TwoWayUpdateable;
 import clarson.ftc.faker.updater.Updater;
 import clarson.ftc.faker.util.EasyTimedDoubleSupplier;
+import com.qualcomm.hardware.lynx.commands.core.LynxGetADCCommand;
 import com.qualcomm.robotcore.hardware.TouchSensor;
 import java.util.function.DoubleSupplier;
+import java.util.HashSet;
 import org.firstinspires.ftc.robotcore.external.navigation.VoltageUnit;
+import static clarson.ftc.faker.updater.Updater.UpdateDelaySource.ANALOG;
 import static clarson.ftc.faker.updater.UpdatesWhen.ALWAYS;
 import static clarson.ftc.faker.updater.UpdatesWhen.ON_BULK_READS;
 
@@ -64,6 +68,7 @@ public class AnalogTouchSensorFake implements TouchSensor, TwoWayUpdateable {
         };
     }
 
+    private final HashSet<Updater> updaters = new HashSet<>();
     private final AnalogInputFake underlyingInput;
     private final double threshold;
 
@@ -95,6 +100,18 @@ public class AnalogTouchSensorFake implements TouchSensor, TwoWayUpdateable {
             voltsFromTouch(getValue, controller.getMaxAnalogInputVoltage()), controller, port);
     }
 
+    public AnalogInputFake asAnalogInput() {
+        return this.underlyingInput;
+    }
+
+    public AnalogInputControllerFake getControllerFake() {
+        return asAnalogInput().getControllerFake();
+    }
+
+    public int getPortNumber() {
+        return asAnalogInput().getPortNumber();
+    }
+
     /**
      * Returns true if the return of `getValue()` is above the threshold provided
      * at construction.
@@ -104,23 +121,41 @@ public class AnalogTouchSensorFake implements TouchSensor, TwoWayUpdateable {
     @SimulateDelay(ON_BULK_READS)
     @Override
     public boolean isPressed() {
-        return getValue() >= threshold;
+        return getValue() >= threshold; // getValue() simulates delay
     }
 
     @SimulateDelay(ON_BULK_READS)
     @Override
     public double getValue() {
+        // NOTE: underlyingInput does not simulate delay, because it isn't registered with any updaters
+        
+        // Simulating delay only if this method was called by the user, not by any 
+        // internal methods. This is done to prevent Updater.updateAll() from being 
+        // called multiple times by LynxModuleUsbDeviceImplFake.readBulkDataPayload()
+        if(this.getControllerFake().shouldReread()) {
+            return underlyingInput.getVoltage() / underlyingInput.getMaxVoltage();
+        }
+
+        // The method was called by a user rather than an internal method; 
+        // simulate delay.
+        final LynxGetADCCommand command = new LynxGetADCCommand(
+            this.getControllerFake().getLynxModule(),
+            LynxGetADCCommand.Channel.user(this.getPortNumber()),
+            LynxGetADCCommand.Mode.ENGINEERING
+        );
+
+        ModularUpdater.updateAllOnceIfAnyCacheOutdated(updaters, ANALOG, this, command);
         return underlyingInput.getVoltage() / underlyingInput.getMaxVoltage();
     }
 
     @Override
     public void remember(Updater updater) {
-        underlyingInput.remember(updater);
+        updaters.add(updater);
     }
 
     @Override
     public void forget(Updater updater) {
-        underlyingInput.forget(updater);
+        updaters.remove(updater);
     }
 
     @Override

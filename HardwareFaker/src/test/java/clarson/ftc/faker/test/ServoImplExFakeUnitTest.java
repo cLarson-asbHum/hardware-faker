@@ -18,8 +18,17 @@
 
 package clarson.ftc.faker.test;
 
+import clarson.ftc.faker.LynxModuleHardwareFake;
+import clarson.ftc.faker.LynxUsbDeviceImplFake;
+import clarson.ftc.faker.ServoControllerExFake;
 import clarson.ftc.faker.ServoImplExFake;
+import clarson.ftc.faker.updater.Updater;
+import clarson.ftc.faker.updater.ModularUpdater;
+import clarson.ftc.faker.util.AbstractTwoWayUpdateable;
 import clarson.ftc.faker.wrapper.PositionalServoData;
+import clarson.ftc.faker.wrapper.ServoData;
+import com.qualcomm.robotcore.exception.RobotCoreException;
+import com.qualcomm.robotcore.hardware.LynxModuleDescription;
 import com.qualcomm.robotcore.hardware.PwmControl;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.ServoImplEx;
@@ -65,7 +74,6 @@ public class ServoImplExFakeUnitTest {
         assertEquals(0, servo.getPosition());
         assertTrue(servo.isPwmEnabled());
     }
-
 
     @ParameterizedClass
     @ValueSource(strings = { "FORWARD", "REVERSE" })
@@ -563,5 +571,368 @@ public class ServoImplExFakeUnitTest {
                 assertFloatEquals(maxTime, affectedSumOfPartsTime, 0.001);
             }
         }
+    }
+
+    @Nested
+    class UpdaterDependent {
+        private ModularUpdater updater = new ModularUpdater();
+        ServoControllerExFake controller;
+        ServoImplExFake servo = null;
+
+        LynxUsbDeviceImplFake lynxUsb = null;
+        LynxModuleHardwareFake lynx = null;
+
+        double rpm = 180;
+        double turns = 5;
+        PwmRange maxPwm = new PwmRange(500, 2500);
+
+        private final MockUpdateable counter = new MockUpdateable();
+
+        LynxModuleHardwareFake createLynxModule(LynxUsbDeviceImplFake lynx) {
+            LynxModuleHardwareFake module = null;
+            try {
+                module = (LynxModuleHardwareFake) lynx.getOrAddModule(
+                    new LynxModuleDescription.Builder(-1, true)
+                        .setUserModule()
+                        // .setSystemSynthetic()
+                        .build()    
+                );
+            }  catch (InterruptedException unused) {
+                // Do nothing...
+            } catch(RobotCoreException err) {
+                fail("RobotCoreException caught in addLynxModule(): " + err.getMessage());
+            }
+            
+            try {
+                lynx.armOrPretend();
+            } catch(RobotCoreException | InterruptedException err) {
+                fail(err);
+            }
+
+        
+            return module;
+        }
+
+        @BeforeEach
+        void constructAndRegister() {
+            System.out.println("*****************************");
+
+            // Creating the controller
+            controller = new ServoControllerExFake();
+            servo = new ServoImplExFake(new PositionalServoData(rpm, turns, 0, maxPwm), controller);
+            servo.setPwmRange(maxPwm);
+            
+            lynxUsb = new LynxUsbDeviceImplFake();
+            lynx = createLynxModule(lynxUsb);
+            updater.register(servo, lynx);
+            updater.register(counter, lynx);
+        }
+
+        /**
+         * Counts the number of times it has been updated
+         */
+        private final class MockUpdateable extends AbstractTwoWayUpdateable {
+            private int totalUpdates = 0;
+            private double lastDeltaSec = 0;
+
+            @Override
+            protected final double updateImplementation(double deltaSec) {
+                totalUpdates++;
+                lastDeltaSec = deltaSec;
+                return 1;
+            }
+
+            public final void clearCount() {
+                totalUpdates = 0;
+            }
+
+            public final int getTotalUpdates() {
+                return this.totalUpdates;
+            }
+            
+            public final double getLastDeltaSec() {
+                return this.lastDeltaSec;
+            }
+
+            /**
+             * Alias for getTotalUpdates()
+             */
+            public final int getTotalCalls() {
+                return this.getTotalUpdates();
+            }
+        }
+
+        @DisplayName("setUpdatingEnabled and isUpdatingEnabled match")
+        @Test
+        void setAndGetUpdatingEnabledMatch() {
+            servo.setUpdatingEnabled(false);
+            assertEquals(false, servo.isUpdatingEnabled());
+            
+            servo.setUpdatingEnabled(false);
+            assertEquals(false, servo.isUpdatingEnabled());
+
+            servo.setUpdatingEnabled(true);
+            assertEquals(true, servo.isUpdatingEnabled());
+
+            servo.setUpdatingEnabled(false);
+            assertEquals(false, servo.isUpdatingEnabled());
+
+            servo.setUpdatingEnabled(true);
+            assertEquals(true, servo.isUpdatingEnabled());
+        }
+        
+        @DisplayName("forget removes updater internally; remember adds it back")
+        @Test
+        void forgetRemovesRememberAdds() {
+            // NOTE: Assumes that getPulseWidth simulates delay always
+            servo.getPulseWidth();
+            System.out.println("[ForgetRemoves]");
+            assertEquals(1, counter.getTotalUpdates(), "is registered initially");
+            
+            servo.forget(updater);
+            servo.getPulseWidth();
+            assertEquals(1, counter.getTotalUpdates(), "updater no longer updated by servo");
+
+            servo.getPulseWidth();
+            servo.getPulseWidth();
+            servo.getPulseWidth();
+            assertEquals(1, counter.getTotalUpdates(), "updater still no longer updated by servo");
+
+            servo.remember(updater);
+            servo.getPulseWidth();
+            assertEquals(2, counter.getTotalUpdates(), "updater now is updated by servo");
+            
+            servo.getPulseWidth();
+            servo.getPulseWidth();
+            servo.getPulseWidth();
+            assertEquals(5, counter.getTotalUpdates(), "updater still is updated by servo");
+            System.out.println("=============================\n");
+        }
+
+        @DisplayName("setPosition updates automatically when registered with an updater")
+        @Test
+        void setPositionUpdatesAutomaticallyWhenRegistered() {
+            servo.setPosition(0.5);
+            assertEquals(1, counter.getTotalUpdates());
+
+            servo.setPosition(0.75);
+            assertEquals(2, counter.getTotalUpdates());
+
+            System.out.println();
+            final double[] pos = { 
+                0.83, 0.84, 0.85, 0.86, 0.87, 0.88, 0.89, 0.90,
+                0.93, 0.94, 0.95, 0.96, 0.97, 0.99, 0.99, 1.00
+            };
+            for(int i = 2; i < 7; i++) {
+                servo.setPosition(pos[1 + 2 * (i - 1)]);
+                assertEquals(1 + 2 * (i - 1), counter.getTotalUpdates());
+                
+                servo.setPosition(pos[2 + 2 * (i - 1)]);
+                assertEquals(2 + 2 * (i - 1), counter.getTotalUpdates());
+            }
+        }
+
+        @DisplayName("setPosition delays for a different position when bulk caching is off")
+        @Test
+        void setPositionDelaysForDifferentPositionInOff() {
+            servo.setPosition(0.5);
+            assertEquals(1, counter.getTotalUpdates());
+
+            servo.setPosition(0.5);
+            assertEquals(1, counter.getTotalUpdates(), "Total updates did not change");
+
+            servo.setPosition(0.75);
+            assertEquals(2, counter.getTotalUpdates());
+
+            System.out.println();
+            final double[] pos = { 
+                0.83, 0.84, 0.85, 0.86, 0.87, 0.88, 0.89, 0.90,
+                0.93, 0.94, 0.95, 0.96, 0.97, 0.99, 0.99, 1.00
+            };
+            for(int i = 2; i < 7; i++) {
+                servo.setPosition(pos[1 + 2 * (i - 1)]);
+                assertEquals(1 + 2 * (i - 1), counter.getTotalUpdates());
+
+                servo.setPosition(pos[1 + 2 * (i - 1)]);
+                assertEquals(1 + 2 * (i - 1), counter.getTotalUpdates(), "Total updates did not change");
+                
+                servo.setPosition(pos[2 + 2 * (i - 1)]);
+                assertEquals(2 + 2 * (i - 1), counter.getTotalUpdates());
+            }
+        }
+        
+        @DisplayName("setPosition delays the exact same even on MANUAL")
+        @Test
+        void setPositionDelaysForDifferentPositionInManual() {
+            lynx.setBulkCachingMode(LynxModuleHardwareFake.BulkCachingMode.MANUAL);
+            servo.setPosition(0.5);
+            assertEquals(1, counter.getTotalUpdates());
+
+            servo.setPosition(0.5);
+            assertEquals(1, counter.getTotalUpdates(), "Total updates did not change");
+
+            servo.setPosition(0.75);
+            assertEquals(2, counter.getTotalUpdates());
+
+            System.out.println();
+            final double[] pos = { 
+                0.83, 0.84, 0.85, 0.86, 0.87, 0.88, 0.89, 0.90,
+                0.93, 0.94, 0.95, 0.96, 0.97, 0.99, 0.99, 1.00
+            };
+            for(int i = 2; i < 7; i++) {
+                servo.setPosition(pos[1 + 2 * (i - 1)]);
+                assertEquals(1 + 2 * (i - 1), counter.getTotalUpdates());
+
+                servo.setPosition(pos[1 + 2 * (i - 1)]);
+                assertEquals(1 + 2 * (i - 1), counter.getTotalUpdates(), "Total updates did not change");
+                
+                servo.setPosition(pos[2 + 2 * (i - 1)]);
+                assertEquals(2 + 2 * (i - 1), counter.getTotalUpdates());
+            }
+        }
+        
+        @DisplayName("setPosition delays the exact same even on AUTO")
+        @Test
+        void setPositionDelaysForDifferentPositionInAuto() {
+            lynx.setBulkCachingMode(LynxModuleHardwareFake.BulkCachingMode.AUTO);
+            servo.setPosition(0.5);
+            assertEquals(1, counter.getTotalUpdates());
+
+            servo.setPosition(0.5);
+            assertEquals(1, counter.getTotalUpdates(), "Total updates did not change");
+
+            servo.setPosition(0.75);
+            assertEquals(2, counter.getTotalUpdates());
+
+            System.out.println();
+            final double[] pos = { 
+                0.83, 0.84, 0.85, 0.86, 0.87, 0.88, 0.89, 0.90,
+                0.93, 0.94, 0.95, 0.96, 0.97, 0.99, 0.99, 1.00
+            };
+            for(int i = 2; i < 7; i++) {
+                servo.setPosition(pos[1 + 2 * (i - 1)]);
+                assertEquals(1 + 2 * (i - 1), counter.getTotalUpdates());
+
+                servo.setPosition(pos[1 + 2 * (i - 1)]);
+                assertEquals(1 + 2 * (i - 1), counter.getTotalUpdates(), "Total updates did not change");
+                
+                servo.setPosition(pos[2 + 2 * (i - 1)]);
+                assertEquals(2 + 2 * (i - 1), counter.getTotalUpdates());
+            }
+        }
+        
+        @DisplayName("getPosition never simulates delay")
+        @Test
+        void getPositionUpdatesAutomaticallyWhenRegistered() {
+            servo.getData().position += 0.05; // Change position in case getPosition() needs change to simulate delay
+            servo.getPosition();
+            assertEquals(0, counter.getTotalUpdates());
+
+            servo.getData().position += 0.05; // Change position in case getPosition() needs change to simulate delay
+            servo.getPosition();
+            assertEquals(0, counter.getTotalUpdates());
+
+            System.out.println();
+            for(int i = 2; i < 7; i++) {
+                servo.getData().position += 0.05; // Change position in case getPosition() needs change to simulate delay
+                servo.getPosition();
+                assertEquals(0, counter.getTotalUpdates());
+                
+                servo.getData().position += 0.05; // Change position in case getPosition() needs change to simulate delay
+                servo.getPosition();
+                assertEquals(0, counter.getTotalUpdates());
+            }
+        }
+
+        @DisplayName("getPosition never simulates delay, even in OFF")
+        @Test
+        void getPositionDelaysForDifferentPositionInOff() {
+            servo.getData().position += 0.05; // Change position in case getPosition() needs change to simulate delay
+            servo.getPosition();
+            assertEquals(0, counter.getTotalUpdates());
+
+            servo.getPosition();
+            assertEquals(0, counter.getTotalUpdates(), "Total updates did not change");
+
+            servo.getData().position += 0.05; // Change position in case getPosition() needs change to simulate delay
+            servo.getPosition();
+            assertEquals(0, counter.getTotalUpdates());
+
+            System.out.println();
+            for(int i = 2; i < 7; i++) {
+                servo.getData().position += 0.05; // Change position in case getPosition() needs change to simulate delay
+                servo.getPosition();
+                assertEquals(0, counter.getTotalUpdates());
+
+                servo.getPosition();
+                assertEquals(0, counter.getTotalUpdates(), "Total updates did not change");
+                
+                servo.getData().position += 0.05; // Change position in case getPosition() needs change to simulate delay
+                servo.getPosition();
+                assertEquals(0, counter.getTotalUpdates());
+            }
+        }
+        
+        @DisplayName("getPosition never simulates delay, even in MANUAL")
+        @Test
+        void getPositionDelaysForDifferentPositionInManual() {
+            lynx.setBulkCachingMode(LynxModuleHardwareFake.BulkCachingMode.MANUAL);
+            servo.getData().position += 0.05; // Change position in case getPosition() needs change to simulate delay
+            servo.getPosition();
+            assertEquals(0, counter.getTotalUpdates());
+
+            servo.getPosition();
+            assertEquals(0, counter.getTotalUpdates(), "Total updates did not change");
+
+            servo.getData().position += 0.05; // Change position in case getPosition() needs change to simulate delay
+            servo.getPosition();
+            assertEquals(0, counter.getTotalUpdates());
+
+            System.out.println();
+            for(int i = 2; i < 7; i++) {
+                servo.getData().position += 0.05; // Change position in case getPosition() needs change to simulate delay
+                servo.getPosition();
+                assertEquals(0, counter.getTotalUpdates());
+
+                servo.getPosition();
+                assertEquals(0, counter.getTotalUpdates(), "Total updates did not change");
+                
+                servo.getData().position += 0.05; // Change position in case getPosition() needs change to simulate delay
+                servo.getPosition();
+                assertEquals(0, counter.getTotalUpdates());
+            }
+        }
+        
+        @DisplayName("getPosition never simulates delay, even in AUTO")
+        @Test
+        void getPositionDelaysForDifferentPositionInAuto() {
+            lynx.setBulkCachingMode(LynxModuleHardwareFake.BulkCachingMode.AUTO);
+            servo.getData().position += 0.05; // Change position in case getPosition() needs change to simulate delay
+            servo.getPosition();
+            assertEquals(0, counter.getTotalUpdates());
+
+            servo.getPosition();
+            assertEquals(0, counter.getTotalUpdates(), "Total updates did not change");
+
+            servo.getData().position += 0.05; // Change position in case getPosition() needs change to simulate delay
+            servo.getPosition();
+            assertEquals(0, counter.getTotalUpdates());
+
+            System.out.println();
+            for(int i = 2; i < 7; i++) {
+                servo.getData().position += 0.05; // Change position in case getPosition() needs change to simulate delay
+                servo.getPosition();
+                assertEquals(0, counter.getTotalUpdates());
+
+                servo.getPosition();
+                assertEquals(0, counter.getTotalUpdates(), "Total updates did not change");
+                
+                servo.getData().position += 0.05; // Change position in case getPosition() needs change to simulate delay
+                servo.getPosition();
+                assertEquals(0, counter.getTotalUpdates());
+            }
+        }
+        
+        // TODO: Test PWM methods with an updater
     }
 }

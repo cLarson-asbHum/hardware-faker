@@ -45,7 +45,9 @@ public class ServoImplExFake extends ServoImplEx implements Rotateable, TwoWayUp
      */
     private static int findAvailablePort(ServoControllerExFake controller) {
         for(int i = 0; i < controller.totalPorts(); i++) {
-            controller.isPortAvailable(i);
+            if(controller.isPortAvailable(i)) {
+                return i;
+            }
         }
 
         // The method would've early returned if any was available

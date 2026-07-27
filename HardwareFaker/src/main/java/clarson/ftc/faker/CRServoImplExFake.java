@@ -193,4 +193,18 @@ public class CRServoImplExFake extends CRServoImplEx implements Rotateable, TwoW
         Updater.updateAllOnce(updaters, SERVO);
         return super.isPwmEnabled();
     }
+
+    @Override
+    @SimulateDelay(ALWAYS)
+    public void setPulseWidth(double usWidth) {
+        Updater.updateAllOnce(updaters, SERVO);
+        super.setPulseWidth(usWidth);
+    }
+
+    @Override
+    @SimulateDelay(ALWAYS)
+    public double getPulseWidth() {
+        Updater.updateAllOnce(updaters, SERVO);
+        return super.getPulseWidth();
+    }
 }

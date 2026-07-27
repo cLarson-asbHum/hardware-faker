@@ -200,4 +200,18 @@ public class ServoImplExFake extends ServoImplEx implements Rotateable, TwoWayUp
         Updater.updateAllOnce(updaters, SERVO);
         return super.isPwmEnabled();
     }
+
+    @Override
+    @SimulateDelay(ALWAYS)
+    public void setPulseWidth(double usWidth) {
+        Updater.updateAllOnce(updaters, SERVO);
+        super.setPulseWidth(usWidth);
+    }
+
+    @Override
+    @SimulateDelay(ALWAYS)
+    public double getPulseWidth() {
+        Updater.updateAllOnce(updaters, SERVO);
+        return super.getPulseWidth();
+    }
 }

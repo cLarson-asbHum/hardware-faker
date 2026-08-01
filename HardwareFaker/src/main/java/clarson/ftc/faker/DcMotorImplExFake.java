@@ -45,7 +45,7 @@ public class DcMotorImplExFake extends DcMotorImplEx implements Rotateable, TwoW
         final MotorConfigurationType result = new MotorConfigurationType();
         result.setTicksPerRev(data.ticksPerRev);
         result.setMaxRPM(data.maxTicksPerSec / data.ticksPerRev);
-        result.setGearing(1); // TODO: Make gearing and torque a part of MotorData?
+        result.setGearing(1);
         result.setAchieveableMaxRPMFraction(1); // NOTE: waat? I don't know what to do with this property...
         result.setOrientation(Rotation.CW); // NOTE: This says CCW; however, position can be interpreted however
         return result;
@@ -55,7 +55,7 @@ public class DcMotorImplExFake extends DcMotorImplEx implements Rotateable, TwoW
         final MotorConfigurationType result = new MotorConfigurationType();
         result.setTicksPerRev(ticksPerRev);
         result.setMaxRPM(rpm);
-        result.setGearing(1); // TODO: Make gearing and torque a part of MotorData?
+        result.setGearing(1);
         result.setAchieveableMaxRPMFraction(1); // NOTE: waat? I don't know what to do with this property...
         result.setOrientation(Rotation.CW); // NOTE: This says CCW; however, position can be interpreted however
         return result;
@@ -65,16 +65,16 @@ public class DcMotorImplExFake extends DcMotorImplEx implements Rotateable, TwoW
      * Finds the lowest valued, unnoccupied port on the controller. If none are
      * found, -1 is returned.
      * 
-     * @return The lowest avaiable port, or -1 if none exists.
+     * @return The lowest available port, or -1 if none exists.
      */
-    private static int findAvaiablePort(DcMotorControllerExFake controller) {
-        for(int i = 0; i < 4; i++) {
+    private static int findAvailablePort(DcMotorControllerExFake controller) {
+        for(int i = 0; i < controller.totalPorts(); i++) {
             if(controller.isPortAvailable(i)) {
                 return i;
             }
         }
 
-        // The method would've early returned if any was avaiable
+        // The method would've early returned if any was available
         return -1;
     }
 
@@ -156,7 +156,7 @@ public class DcMotorImplExFake extends DcMotorImplEx implements Rotateable, TwoW
     /**
      * Constructs a new `DcMotorImplExFake` connected to the given controller. 
      * The motor is connected to the controller at the lowest available port.
-     * If no ports are avaiable, an IllegalArgumentException is thrown.
+     * If no ports are available, an IllegalArgumentException is thrown.
      * 
      * The motor referenced by the given `MotorData's` actuator field is 
      * ignored. While the value can be anything, it is recommended to be null
@@ -167,18 +167,7 @@ public class DcMotorImplExFake extends DcMotorImplEx implements Rotateable, TwoW
      * @param controller What drives the motor. 
      */
     public DcMotorImplExFake(MotorData data, DcMotorControllerExFake controller) {
-        this(data, controller, findAvaiablePort(controller));
-        // super(
-        //     controller, 
-        // findAvaiablePort(controller), 
-        // DcMotorImplEx.Direction.FORWARD, 
-        // getFakeConfiguration(data));
-
-        // if(!controller.connect(MotorData.copyForMotor(this, data))) {
-        //     throw new IllegalArgumentException("Port number <" + getPortNumber() + "> is not available on controller");
-        // }
-
-        // controller.setMotorType(getPortNumber(), getFakeConfiguration(data));
+        this(data, controller, findAvailablePort(controller));
     }
 
     @Override

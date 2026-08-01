@@ -180,26 +180,11 @@ public class DigitalChannelControllerFake implements DigitalChannelController {
 
     @Override
     public String getConnectionInfo() {
-        
-        return String.format(
-              "DigitalChannelControllerFake Connections:" +
-            "\n    [1]: %s" +  
-            "\n    [2]: %s" +  
-            "\n    [3]: %s" +  
-            "\n    [4]: %s" +  
-            "\n    [5]: %s" +  
-            "\n    [6]: %s" +  
-            "\n    [7]: %s" +  
-            "\n    [8]: %s",
-            safeGetDeviceName(getChannel(0)),
-            safeGetDeviceName(getChannel(1)),
-            safeGetDeviceName(getChannel(2)),
-            safeGetDeviceName(getChannel(3)),
-            safeGetDeviceName(getChannel(4)),
-            safeGetDeviceName(getChannel(5)),
-            safeGetDeviceName(getChannel(6)),
-            safeGetDeviceName(getChannel(7))
-        );
+        String result = "DigitalChannelControllerFake Connections:";
+        for(int i = 0; i < this.totalPorts(); i++) {
+            result += String.format("\n    [%d]: %s", i, safeGetDeviceName(channels[i].channel));
+        }
+        return result;
     } 
     
     @Override

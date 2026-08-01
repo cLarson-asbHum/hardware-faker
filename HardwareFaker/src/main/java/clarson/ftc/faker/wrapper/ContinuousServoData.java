@@ -126,14 +126,11 @@ public class ContinuousServoData extends ServoData<CRServoImplEx> {
     }
     
     
-    // TODO: Update the `update()` method JavaDoc
     /** 
-     * Performs all calculations necessary for correct operation of this fake. 
-     * This should be called by the test itself to simulate real life for an 
-     * opmode, not by opmodes themselves. 
+     * Updates the position of this servo.
      * 
      * @param deltaSec Elapsed number of seconds since the last call to update()
-     * @return The changed number of reovlutions.
+     * @return The changed number of revolutions.
      */
     @Override
     public double update(double deltaSec) {

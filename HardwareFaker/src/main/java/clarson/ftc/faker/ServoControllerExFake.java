@@ -333,8 +333,6 @@ public class ServoControllerExFake implements ServoControllerEx {
     @Override
     public void setServoType(int portNumber, ServoConfigurationType servoType) {
         if(isPortAvailable(portNumber)) {
-            // FIXME: This is the only method that is this graceful, but we need it to be
-            //        DcMotorImplEx calls this method before we can connect anything, soooo... 
             return;
         }
 
@@ -358,22 +356,11 @@ public class ServoControllerExFake implements ServoControllerEx {
 
     @Override
     public String getConnectionInfo() {
-        // TODO: Make this genralizable for any number of ports varyng with 
-        return String.format(
-              "ServoControllerExFake Connections:" +
-            "\n    [0]: %s" +  
-            "\n    [1]: %s" +  
-            "\n    [2]: %s" +  
-            "\n    [3]: %s" +  
-            "\n    [4]: %s" +  
-            "\n    [5]: %s",
-            safeGetDeviceName(servos[0].actuator),
-            safeGetDeviceName(servos[1].actuator),
-            safeGetDeviceName(servos[2].actuator),
-            safeGetDeviceName(servos[3].actuator),
-            safeGetDeviceName(servos[4].actuator),
-            safeGetDeviceName(servos[5].actuator)
-        );
+        String result = "ServoControllerExFake Connections:";
+        for(int i = 0; i < this.totalPorts(); i++) {
+            result += String.format("\n    [%d]: %s", i, safeGetDeviceName(servos[i].actuator));
+        }
+        return result;
     }
 
     @Override

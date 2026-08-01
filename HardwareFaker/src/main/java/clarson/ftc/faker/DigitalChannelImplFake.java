@@ -41,16 +41,16 @@ public class DigitalChannelImplFake extends DigitalChannelImpl implements TwoWay
      * Finds the lowest valued, unnoccupied port on the controller. If none are
      * found, -1 is returned.
      * 
-     * @return The lowest avaiable port, or -1 if none exists.
+     * @return The lowest available port, or -1 if none exists.
      */
-    private static int findAvaiablePort(DigitalChannelControllerFake controller) {
-        for(int i = 0; i < 8; i++) {
+    private static int findAvailablePort(DigitalChannelControllerFake controller) {
+        for(int i = 0; i < controller.totalPorts(); i++) {
             if(controller.isPortAvailable(i)) {
                 return i;
             }
         }
 
-        // The method would've early returned if any was avaiable
+        // The method would've early returned if any was available
         return -1;
     }
 
@@ -170,7 +170,7 @@ public class DigitalChannelImplFake extends DigitalChannelImpl implements TwoWay
      * @param controller The controller which the DigitalChannel resides on
      */
     public DigitalChannelImplFake(DigitalChannelData data, DigitalChannelControllerFake controller) {
-        this(data, controller, findAvaiablePort(controller));
+        this(data, controller, findAvailablePort(controller));
     }
 
     public DigitalChannelControllerFake getController() {
@@ -226,7 +226,6 @@ public class DigitalChannelImplFake extends DigitalChannelImpl implements TwoWay
         // Simulating delay only if this method was called by the user, not by any 
         // internal methods. This is done to prevent Updater.updateAll() from being 
         // called multiple times by LynxModuleUsbDeviceImplFake.readBulkDataPayload()
-        // FIXME: Every Bulk-read hardware needs this condition!! Add a corresponding test for each one
         if(controller.shouldReread()) {
             return super.getState();    
         }

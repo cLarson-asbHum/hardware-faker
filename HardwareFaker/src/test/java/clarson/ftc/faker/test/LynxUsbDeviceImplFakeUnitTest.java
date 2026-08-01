@@ -437,33 +437,7 @@ class LynxUsbDeviceImplFakeUnitTest {
                 // Make sure the response was recieved at the command level
                 assertTrue(command.isAckOrResponseReceived());
                 assertNotEquals(null, response);
-
-                //#region DEV START: Logging the payload as bytes
-                // [00]  uint8_t  digitalInputs;      // DIGITAL_START
-
-                // [01]  int32_t  motor0position_enc; // ENCODER_START
-                // [05]  int32_t  motor1position_enc;
-                // [09]  int32_t  motor2position_enc;
-                // [13]  int32_t  motor3position_enc;
-
-                // [17]  uint8_t  motorStatus;        // STATUS_START
-
-                // [18]  int16_t  motor0velocity_cps; // VELOCITY_START
-                // [20]  int16_t  motor1velocity_cps;
-                // [22]  int16_t  motor2velocity_cps;
-                // [24]  int16_t  motor3velocity_cps;
-
-                // [26]  int16_t  analog0_mV;         // ANALOG_START
-                // [28]  int16_t  analog1_mV;
-                // [30]  int16_t  analog2_mV;
-                // [32]  int16_t  analog3_mV;
-                int j = 0;
-                for(byte b : response.toPayloadByteArray()) {
-                    System.out.println("[is correct] At <" + j + ">: 0x" + Integer.toHexString(b));
-                    j++;
-                }
-                //#endregion DEV END
-
+                
                 // Make sure the data is correct
                 // If it's null, we check that everything is zero
                 for(int i = 0; i < motors.length; i++) {
